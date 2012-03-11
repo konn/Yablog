@@ -1,0 +1,50 @@
+<header .hero-unit>
+    <h1>
+      <a href=@{RootR}>
+        #{blogTitle}
+    <p .lead>#{description}
+
+$maybe msg <- mmsg
+      <div #message .alert .alert-info .row8 .offest2>#{msg}
+<div .row>
+    <div .span4>
+      <ul .nav .nav-list .well>
+        <li .nav-header>
+          Recent Posts
+        $forall art <- articles
+          <li>
+            <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)}>
+              #{articleTitle art}
+        <li .nav-header>
+          <i .icon-tags> #
+          Tags
+        $forall tag <- tags
+          <li>
+            <a href=@{TagR tag}>
+              #{tag}
+
+        <li .nav-header>
+          Control
+        $if accessible
+          <li>
+            <a href=@{UserSettingsR}>
+              <i .icon-cog> #
+              Settings
+          <li>
+            <a href=@{CreateR}>
+              <i .icon-pencil> #
+              Post new article
+
+        $maybe usr <- musr
+          <li>
+            <a href=@{AuthR LogoutR}>
+              <i .icon-arrow-left> #
+              Logout
+        $nothing
+          <li>
+            <a href=@{AuthR LoginR}>
+              <i .icon-arrow-right> #
+              Login
+
+    <div .span8>
+      ^{widget}

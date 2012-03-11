@@ -1,0 +1,5 @@
+<h2>
+  Settings
+<form method=post action=@{UserSettingsR} enctype=#{enctype}>
+  ^{widget}
+  <input type=submit>

@@ -1,0 +1,11 @@
+$(document).ready(function(){
+    function updatePreview(data, type) {
+	$("#preview-contents").html(data);
+    }
+    function reloadPreview() {
+	var src = $('#src').val();
+	var title = $('#title').val()
+	$("#preview-contents").contents().find("html").load("/preview", $("#edit-form").serializeArray());
+    }
+    $('#show-preview').click(function(){ reloadPreview(); });
+});

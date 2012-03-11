@@ -1,0 +1,26 @@
+<article>
+  <h1>
+    #{title}
+  <div .author>
+    <i .icon-user>
+    written by #{userScreenName author}
+  $if not (null tags)
+    <div .tags>
+      <i .icon-tags>
+      <ul .nav-pills>
+        $forall tag <- tags
+          <li>
+            <a href=@{TagR tag}>
+              #{tag}
+  #{body}
+
+  $if (not $ null comments)
+    <h2>_{MsgComments}
+    $forall c <- comments
+      <article .comment>
+        <div .comment-body>
+          #{commentBody c}
+        <div .comment-author>
+          #{commentAuthor c}
+  $if editable
+    <a href=@{ModifyR date title} .btn>_{MsgEditArticle} #

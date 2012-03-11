@@ -1,0 +1,31 @@
+User
+    ident Text
+    screenName Text
+    password Text Maybe
+    email Text Maybe
+    locale Text default="ja"
+    profile Text default=""
+    UniqueUser ident
+    UserName screenName
+
+Article
+  author     UserId  Eq
+  title      Text  Eq
+  body       String
+  createdDate Int Gt Lt Eq Desc
+  createdTime Int Gt Lt Eq Desc
+  modifiedAt  UTCTime Maybe Gt Lt Eq Desc
+  UniqueArticle createdDate title
+
+Comment
+  author    Text Eq
+  body      Text
+  password  String
+  createdAt UTCTime Asc
+  article   ArticleId
+
+Tag
+  article ArticleId Eq
+  name    Text Eq
+
+ -- By default this file is used in Model.hs (which is imported by Foundation.hs)

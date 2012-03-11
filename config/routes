@@ -1,0 +1,18 @@
+/static StaticR Static getStatic
+/auth   AuthR   Auth   getAuth
+
+/favicon.ico FaviconR GET
+/robots.txt RobotsR GET
+
+/ RootR GET
+
+/preview PreviewR POST
+/article/create CreateR GET POST
+/article/#Day/#T.Text/edit ModifyR GET POST
+/article/#Day/#T.Text ArticleR GET PUT DELETE
+/article/#Day/#T.Text/delete DeleteR GET
+/article/#Day/#T.Text/comment CommentR POST PUT DELETE
+/article/#Day/#T.Text/rss RssR GET
+/tag/#T.Text TagR GET
+
+/user/settings UserSettingsR GET PUT POST

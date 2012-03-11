@@ -1,0 +1,8 @@
+*~
+*.hi
+*.o
+dist
+.DS_Store
+db
+static/tmp
+deploy

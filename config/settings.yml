@@ -1,0 +1,21 @@
+Default: &defaults
+  host: "localhost"
+  port: 3000
+  copyright: (C) Hiromi ISHII 2011, All rights reserved.
+  title: "Insert Blog Title Here"
+  admins: ["Users", "Who", "Can", "Post", "Articles"]
+  description: "Tiny Blog"
+  #analytics: UA-YOURCODE
+
+Development:
+  <<: *defaults
+
+Testing:
+  <<: *defaults
+
+Staging:
+  <<: *defaults
+
+Production:
+  approot: "http://www.example.com"
+  <<: *defaults

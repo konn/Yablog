@@ -1,0 +1,24 @@
+Default: &defaults
+  user: Yablog
+  password: Yablog
+  host: localhost
+  port: 27017
+  database: Yablog
+  poolsize: 10
+
+Development:
+  <<: *defaults
+
+Test:
+  database: Yablog_test
+  <<: *defaults
+
+Staging:
+  database: Yablog_staging
+  poolsize: 100
+  <<: *defaults
+
+Production:
+  database: Yablog_production
+  poolsize: 100
+  <<: *defaults
