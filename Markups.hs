@@ -11,6 +11,7 @@ import Text.Pandoc
 import Yesod
 import Data.Maybe
 import Prelude
+import Data.Char
 
 addAmazonAssociateLink :: String -> Pandoc -> Pandoc
 addAmazonAssociateLink = bottomUp . procAmazon
@@ -19,9 +20,10 @@ renderMarkup :: String             -- ^ markup language
              -> (Pandoc -> Pandoc) -- ^ pandoc transformer
              -> String             -- ^ source
              -> Html               -- ^ Html
-renderMarkup lang trans = writeHtml opts
-                          . trans
-                          . fromMaybe readMarkdown (lookup lang readers) defaultParserState
+renderMarkup lang trans =
+    writeHtml opts
+                  . trans
+                  . fromMaybe readMarkdown (lookup (map toLower lang) readers) defaultParserState
   where
     opts = defaultWriterOptions
            { writerHTMLMathMethod =
