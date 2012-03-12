@@ -10,6 +10,7 @@ $maybe msg <- mmsg
     <div .span4>
       <ul .nav .nav-list .well>
         <li .nav-header>
+          <i .icon-book> #
           Recent Posts
         $forall art <- articles
           <li>
@@ -22,7 +23,13 @@ $maybe msg <- mmsg
           <li>
             <a href=@{TagR tag}>
               #{tag}
-
+        <li .nav-header>
+          <i .icon-comment> #
+          Recent Comments
+        $forall (comment, article) <- comments
+          <li>
+            <a href=@{ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)}>
+              #{show $ utctDay $ commentCreatedAt comment} #{commentAuthor comment}
         <li .nav-header>
           Control
         $if accessible

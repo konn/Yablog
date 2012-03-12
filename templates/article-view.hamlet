@@ -1,0 +1,28 @@
+<article>
+  <h1>
+    <a href=@{ArticleR date title}>
+      #{title}
+  <div .article-desc>
+    <div .author>
+      <i .icon-user>
+      \ written by #{author}
+    <div .posted-date>
+      <i .icon-calendar>
+      \ posted on #{posted}
+    $maybe d <- articleModifiedAt article
+      <div .modified-date>
+        <i .icon-upload>
+        \ modified on #{show d}
+    $if not (null tags)
+      <div .tags>
+        <i .icon-tags> #
+        <ul .tag-list>
+          $forall tag <- tags
+            <li>
+              <a href=@{TagR tag}>
+                #{tag}
+  <div .article-body .show-grid>
+    #{body}
+    $if editable
+      <div style="text-align: right;">
+        <a href=@{ModifyR date title} .btn>_{MsgEditArticle} #

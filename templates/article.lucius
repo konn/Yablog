@@ -1,6 +1,9 @@
 .comment-desc {
   text-align: right;
 }
-.article-desc {
-  margin: 1em;
+
+.article-body {
+  border: 1px;
+  border-style: solid;
+  padding: 20px;
 }

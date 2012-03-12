@@ -1,32 +1,6 @@
-<article>
-  <h1>
-    #{title}
-  <div .article-desc>
-    <div .author>
-      <i .icon-user>
-      \ written by #{userScreenName author}
-    <div .posted-date>
-      <i .icon-calendar>
-      \ posted on #{posted}
-    $maybe d <- articleModifiedAt article
-      <div .modified-date>
-        <i .icon-upload>
-        \ modified on #{show d}
-    $if not (null tags)
-      <div .tags>
-        <i .icon-tags> #
-        <ul .nav-pills>
-          $forall tag <- tags
-            <li>
-              <a href=@{TagR tag}>
-                #{tag}
-  #{body}
+^{articleView article}
 
-  $if editable
-    <div style="text-align: right;">
-      <a href=@{ModifyR date title} .btn>_{MsgEditArticle} #
-
-  $if (not $ null comments)
+$if (not $ null comments)
     <h2>_{MsgComments}
     $forall c <- comments
       <article .comment .well>
@@ -40,7 +14,7 @@
             <i .icon-calendar>
             #{show $ commentCreatedAt c}
 
-  $maybe (widget, enc) <- mCommentForm
+$maybe (widget, enc) <- mCommentForm
     <h2>_{MsgLeaveComment}
     <form method=post action=@{CommentR date title} enctype=#{enc}>
       ^{widget}

@@ -103,8 +103,8 @@ commentForm' mcom art html = do
                                    }
   flip renderBootstrap html $
     Comment <$> areq textField nameField (userScreenName . entityVal <$> musr)
-            <*> (unTextarea <$> areq textareaField commentField Nothing)
-            <*> pure Nothing
+            <*> (unTextarea <$> areq textareaField commentField (Textarea . commentBody <$> mcom))
+            <*> pure (commentPassword =<< mcom)
             <*> pure time
             <*> pure art
 
@@ -142,28 +142,20 @@ getCreateR :: Handler RepHtml
 getCreateR = do
   ((_, widget), enctype) <- generateFormPost articleForm
   defaultLayout $ do
-    addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
     $(widgetFile "post-article")
 
 getArticleR :: Day -> Text -> Handler RepHtml
-getArticleR date text = do
+getArticleR date title = do
   musr <- maybeAuthId
-  (article, author, comments, tags) <- runDB $ do
-    Entity key article <- getBy404 (UniqueArticle (fromEnum date) text)
-    author <- get404 (articleAuthor article)
-    comments <- map entityVal <$> selectList [CommentArticle ==. key] []
-    tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
-    return (article, author, comments, tags)
+  (article, comments) <- runDB $ do
+    Entity key article <- getBy404 (UniqueArticle (fromEnum date) title)
+    cs <- map entityVal <$> selectList [CommentArticle ==. key] []
+    return (article, cs)
   ((_, cWidget), cEnctype) <- generateFormPost $ commentForm Nothing article
-  let title  = articleTitle article
-      editable = maybe False (== articleAuthor article) musr
-      posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
-      mCommentForm = Just (cWidget, cEnctype)
+  let mCommentForm = Just (cWidget, cEnctype)
   blogTitle <- getBlogTitle
-  body <- markupRender article
   defaultLayout $ do
     setTitle $ toHtml $ T.concat [title, " - ", blogTitle]
-    addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
     $(widgetFile "article")
 
 putArticleR :: Day -> Text -> Handler RepHtml
@@ -203,7 +195,6 @@ getModifyR day title = do
   ((_, cWidget), cEnctype) <- generateFormPost $ commentDeleteForm artId
   let mCommentForm = Just (cWidget, cEnctype)
   defaultLayout $ do
-    addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
     setTitleI $ MsgEdit title
     $(widgetFile "edit-article")
 
@@ -229,7 +220,7 @@ deleteArticleR day title = do
 postCommentR :: Day -> Text -> Handler RepHtml
 postCommentR date title = do
   Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) title
-  ((result, widget), enctype) <- runFormPost $ commentForm' Nothing key
+  ((result, _), _) <- runFormPost $ commentForm' Nothing key
   case result of
     FormSuccess comment -> do
       ans <- runDB $ insertBy comment
@@ -248,7 +239,7 @@ putCommentR = undefined
 
 deleteCommentR :: Day -> Text -> Handler ()
 deleteCommentR day title = do
-  Entity uid usr <- requireAuth
+  Entity uid _ <- requireAuth
   Entity aid art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) title
   ((result, _), _) <- runFormPost $ commentDeleteForm aid
   when (uid /= articleAuthor art) $ do
@@ -268,7 +259,7 @@ getRssR = undefined
 
 postPreviewR :: Handler RepHtml
 postPreviewR = do
-  author <- entityVal <$> requireAuth
+  author <- userScreenName . entityVal <$> requireAuth
   ((result, _), _) <- runFormPost articleForm
   case result of
     FormSuccess (article, tags) -> do
@@ -277,11 +268,10 @@ postPreviewR = do
           mCommentForm = Nothing :: Maybe (Widget, Text)
           title    = articleTitle article
           posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
-          date     = toEnum $ articleCreatedDate article
+          date     = toEnum $ articleCreatedDate article :: Day
       body <- markupRender article
       defaultLayout $ do
-        addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
-        $(widgetFile "article")
+        $(widgetFile "article-view")
     _ -> notFound
 
 getTagR :: Text -> Handler RepHtml
@@ -292,4 +282,3 @@ getTagR tag = do
   defaultLayout $ do
     setTitleI $ MsgArticlesForTag tag
     $(widgetFile "tag")
-

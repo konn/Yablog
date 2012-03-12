@@ -1,6 +1,5 @@
 module Handler.Root where
 import qualified Data.Text as T
-import Control.Monad
 import Import
 
 -- This is a handler function for the GET request method on the RootR
@@ -12,10 +11,8 @@ import Import
 -- inclined, or create a single monolithic file.
 getRootR :: Handler RepHtml
 getRootR = do
-  as <- runDB $ do
-    as <- map entityVal <$> selectList [] [Asc ArticleCreatedDate, Asc ArticleCreatedTime, LimitTo 5 :: SelectOpt Article]
-    zip as <$> mapM (get404 . articleAuthor) as
-  articles <- mapM (\(art, auth) -> (,,) art auth <$> markupRender art) as
+  articles <- runDB $
+    map entityVal <$> selectList [] [LimitTo 5, Desc ArticleCreatedDate, Desc ArticleCreatedTime]
   title <- getBlogTitle
   defaultLayout $ do
     h2id <- lift newIdent

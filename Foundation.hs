@@ -41,7 +41,7 @@ import Model
 import Text.Jasmine (minifym)
 import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
-import Data.List (nub)
+import Data.List (nub, sort)
 import Data.Maybe
 #if DEVELOPMENT
 import qualified Data.Text.Lazy.Encoding
@@ -51,6 +51,7 @@ import Network.Mail.Mime (sendmail)
 import Data.Time
 import System.Locale
 import Control.Applicative
+import Control.Monad
 import qualified Data.Text as T
 import Markups
 
@@ -127,8 +128,12 @@ instance Yesod Yablog where
         mmsg <- getMessage
         blogTitle <- getBlogTitle
         description <- getBlogDescription
+        comments <- runDB $ do
+          cs <- map entityVal <$> selectList [] [LimitTo 10, Desc CommentCreatedAt]
+          as <- mapM (get404 . commentArticle) cs
+          return $ zip cs as
         articles <- map entityVal <$> runDB (selectList [] [LimitTo 5, Desc ArticleCreatedDate, Desc ArticleCreatedTime])
-        tags <- nub . map (tagName . entityVal) <$> runDB (selectList [] [])
+        tags <- sort . nub . map (tagName . entityVal) <$> runDB (selectList [] [])
         -- We break up the default layout into two components:
         -- default-layout is the contents of the body tag, and
         -- default-layout-wrapper is the entire page. Since the final
@@ -136,6 +141,7 @@ instance Yesod Yablog where
         -- you to use normal widget features in default-layout.
         pc <- widgetToPageContent $ do
             addScriptRemote "https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"
+            addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
             addScript $ StaticR js_bootstrap_js
             addStylesheet $ StaticR css_bootstrap_responsive_css
             addStylesheet $ StaticR css_bootstrap_css
