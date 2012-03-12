@@ -1,0 +1,6 @@
+.comment-desc {
+  text-align: right;
+}
+.article-desc {
+  margin: 1em;
+}

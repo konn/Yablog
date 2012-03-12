@@ -24,6 +24,7 @@ Comment
   password  Text Maybe
   createdAt UTCTime Asc
   article   ArticleId
+  UniqueComment article author createdAt
 
 Tag
   article ArticleId Eq

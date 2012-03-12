@@ -7,12 +7,22 @@
     <li>
       <a href="#preview" data-toggle="tab" #show-preview>
         _{MsgPreview}
+    $maybe _ <- mCommentForm
+      <li>
+        <a href="#comment-delete" data-toggle="tab" #show-comment-view>
+          _{MsgDeleteComment}
   <div .tab-content>
     <div .active .tab-pane #editor>
       <form method=post action=@{ModifyR day title} enctype=#{enctype} #edit-form>
         ^{widget}
-        <a href=@{DeleteR day title} .btn .btn-danger>_{MsgDeleteArticle}
+        <a href=@{DeleteR day title} .btn .btn-danger>
+          _{MsgDeleteArticle}
         <input type=submit .btn>
-
     <div .tab-pane #preview>
-      <iframe src=@{PreviewR} #preview-contents .span7 height="100%">
+      <iframe src=@{PreviewR} #preview-contents .span7 height="400px">
+    $maybe (commentWidget, commentEnctype) <- mCommentForm
+      <div .tab-pane #comment-delete>
+        <form action=@{DeleteCommentR day title} method=post enctype=#{commentEnctype}>
+          ^{commentWidget}
+          <input type=submit value=_{MsgDeleteComment}>
+

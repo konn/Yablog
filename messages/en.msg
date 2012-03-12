@@ -13,3 +13,12 @@ InvalidInput: Invalid inputs. Try it again.
 AlreadyExists title@T.Text: The article "#{title}" already exists.
 ArticlesForTag tag@T.Text: Articles tagged with "#{tag}"
 Articles: Articles
+LeaveComment: Leave a comment
+Article: Article
+Title: Title
+Tags: Tags
+CreatedDate: Created date
+CreatedTime: Created time
+Name: Name
+Comment: Comment
+DeleteComment: Delete Comments

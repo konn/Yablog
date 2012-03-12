@@ -1,6 +1,5 @@
 module Handler.User where
 import Import
-import Control.Monad
 import qualified Data.Text as T
 
 userForm :: Form User

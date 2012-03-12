@@ -1,33 +1,47 @@
 <article>
   <h1>
     #{title}
-  <div .author>
-    <i .icon-user>
-    written by #{userScreenName author}
-  <div .posted-date>
-    <i .icon-calendar>
-    posted on #{posted}
-  $maybe d <- articleModifiedAt article
-    <div .modified-date>
-      <i .icon-upload>
-      modified on #{show d}
-  $if not (null tags)
-    <div .tags>
-      <i .icon-tags>
-      <ul .nav-pills>
-        $forall tag <- tags
-          <li>
-            <a href=@{TagR tag}>
-              #{tag}
+  <div .article-desc>
+    <div .author>
+      <i .icon-user>
+      \ written by #{userScreenName author}
+    <div .posted-date>
+      <i .icon-calendar>
+      \ posted on #{posted}
+    $maybe d <- articleModifiedAt article
+      <div .modified-date>
+        <i .icon-upload>
+        \ modified on #{show d}
+    $if not (null tags)
+      <div .tags>
+        <i .icon-tags> #
+        <ul .nav-pills>
+          $forall tag <- tags
+            <li>
+              <a href=@{TagR tag}>
+                #{tag}
   #{body}
+
+  $if editable
+    <div style="text-align: right;">
+      <a href=@{ModifyR date title} .btn>_{MsgEditArticle} #
 
   $if (not $ null comments)
     <h2>_{MsgComments}
     $forall c <- comments
-      <article .comment>
+      <article .comment .well>
         <div .comment-body>
           #{commentBody c}
-        <div .comment-author>
-          #{commentAuthor c}
-  $if editable
-    <a href=@{ModifyR date title} .btn>_{MsgEditArticle} #
+        <div .comment-desc>
+          <div .comment-author>
+            <i .icon-user>
+            #{commentAuthor c}
+          <div .comment-date>
+            <i .icon-calendar>
+            #{show $ commentCreatedAt c}
+
+  $maybe (widget, enc) <- mCommentForm
+    <h2>_{MsgLeaveComment}
+    <form method=post action=@{CommentR date title} enctype=#{enc}>
+      ^{widget}
+      <input type=submit>

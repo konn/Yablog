@@ -13,3 +13,12 @@ InvalidInput: 入力が不正です。
 AlreadyExists title@T.Text: 「#{title}」と既に同名の記事が存在します。
 ArticlesForTag tag@T.Text: 「#{tag}」タグの記事一覧
 Articles: 記事一覧
+LeaveComment: コメントする
+Article: 内容
+Title: タイトル
+Tags: タグ
+CreatedDate: 作成日
+CreatedTime: 作成時間
+Name: 名前
+Comment: コメント
+DeleteComment: コメント削除

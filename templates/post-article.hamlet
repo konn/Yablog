@@ -1,17 +1,17 @@
 <h1>_{MsgPostArticle}
-<div .tabbalble>
-  <ul .nav .nav-tabs>
-    <li .active>
-      <a href="#editor" data-toggle="tab">
-        _{MsgEditOn}
-    <li>
-      <a href="#preview" data-toggle="tab" #show-preview>
-        _{MsgPreview}
-  <div .tab-content>
-    <div .active .tab-pane #editor>
-      <form method=post action=@{CreateR} enctype=#{enctype} #edit-form>
+<form method=post action=@{CreateR} enctype=#{enctype} #edit-form>
+  <div .tabbalble>
+    <ul .nav .nav-tabs>
+      <li .active>
+        <a href="#editor" data-toggle="tab">
+          _{MsgEditOn}
+      <li>
+        <a href="#preview" data-toggle="tab" #show-preview>
+          _{MsgPreview}
+    <div .tab-content>
+      <div .active .tab-pane #editor>
         ^{widget}
-        <input type=submit .btn>
 
-    <div .tab-pane #preview>
-      <iframe src=@{PreviewR} #preview-contents .span7>
+      <div .tab-pane #preview>
+        <iframe src=@{PreviewR} #preview-contents .span7 height="400px">
+  <input type=submit .btn>

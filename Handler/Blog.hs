@@ -7,7 +7,7 @@ import qualified Data.Text as T
 import Control.Applicative
 import Data.Maybe
 import Data.List (sortBy)
-import Data.Function 
+import Data.Function
 
 articleForm :: Form (Article, [Text])
 articleForm = articleForm' Nothing Nothing
@@ -25,32 +25,94 @@ articleForm' mart mtags htm = do
   if maybe False ((/= usrId) . articleAuthor) mart
      then lift $ permissionDenied "You cannot edit that article."
      else flip renderBootstrap htm $
-            let titleSettings = "Title"   { fsId = Just "title", fsClass = ["span8"] }
-                bodySettings  = "Article" { fsId = Just "src", fsClass = ["span8"] }
-                tagsSettings  = "Tags"    { fsId = Just "tags", fsClass = ["span8"] }
+            let titleSettings = FieldSettings { fsLabel = MsgTitle
+                                              , fsName = Just "title"
+                                              , fsId = Just "title"
+                                              , fsClass = ["span8"]
+                                              , fsTooltip = Nothing
+                                              }
+                bodySettings  = FieldSettings { fsLabel = MsgArticle
+                                              , fsId = Just "src"
+                                              , fsName = Just "src"
+                                              , fsClass = ["span8"]
+                                              , fsTooltip = Nothing
+                                              }
+                tagsSettings  = FieldSettings { fsLabel = MsgTags
+                                              , fsId = Just "tags"
+                                              , fsName = Just "tags"
+                                              , fsClass = ["span8"]
+                                              , fsTooltip = Nothing
+                                              }
+                cDateSettings = FieldSettings { fsLabel = MsgCreatedDate
+                                              , fsId = Just "created_date"
+                                              , fsName = Just "created_date"
+                                              , fsClass = []
+                                              , fsTooltip = Nothing
+                                              }
+                cTimeSettings = FieldSettings { fsLabel   = MsgCreatedTime
+                                              , fsName    = Just "created_time"
+                                              , fsId      = Just "created_time"
+                                              , fsClass   = []
+                                              , fsTooltip = Nothing
+                                              }
                 art = Article <$> pure usrId
                               <*> areq textField titleSettings (articleTitle <$> mart)
                               <*> (T.unpack . T.filter (/='\r') . unTextarea <$>
                                     areq textareaField bodySettings
                                              (Textarea . T.pack . articleBody <$> mart))
-                              <*> (fromEnum <$> areq dayField "created_date"
+                              <*> (fromEnum <$> areq dayField cDateSettings
                                                 ((toEnum . articleCreatedDate <$> mart) <|> Just day))
-                              <*> (fromEnum . timeOfDayToTime <$> areq timeField "created_time"
+                              <*> (fromEnum . timeOfDayToTime <$> areq timeField cTimeSettings
                                                 ((timeToTimeOfDay . toEnum . articleCreatedTime <$> mart) <|> Just time))
                               <*> pure (articleModifiedAt =<< mart)
                 tags = T.words . fromMaybe "" <$> aopt textField tagsSettings (Just . T.unwords <$> mtags)
             in (,) <$> art <*> tags
 
+commentDeleteForm :: ArticleId -> Form [Comment]
+commentDeleteForm art html = do
+  let commentSettings = FieldSettings { fsLabel = MsgComments
+                                      , fsClass = ["span8"]
+                                      , fsName  = Just "delete-contents"
+                                      , fsId    = Just "delete-contents"
+                                      , fsTooltip = Nothing
+                                      }
+  cs <- lift $ runDB $ selectList [CommentArticle ==. art] []
+  flip renderBootstrap html $
+    areq (multiSelectFieldList [(mkOptName c, c) | Entity _ c <- cs]) commentSettings Nothing
+  where
+    mkOptName c = T.concat [ commentBody c, " - ", commentAuthor c, " / "
+                           , T.pack$ show $ commentCreatedAt c
+                           ]
+
+
 commentForm' :: Maybe Comment -> ArticleId -> Form Comment
 commentForm' mcom art html = do
   musr <- lift  maybeAuth
   time <- liftIO getCurrentTime
+  let commentField = FieldSettings { fsLabel = MsgComment
+                                   , fsClass = ["span8"]
+                                   , fsName  = Just "comment-contents"
+                                   , fsId    = Just "comment-contents"
+                                   , fsTooltip = Nothing
+                                   }
+      nameField    = FieldSettings { fsLabel = MsgName
+                                   , fsClass = []
+                                   , fsId    = Just "comment-author"
+                                   , fsName  = Just "comment-author"
+                                   , fsTooltip = Nothing
+                                   }
   flip renderBootstrap html $
-    Comment <$> areq textField "Author" (userScreenName . entityVal <$> musr)
-            <*> areq textField "Comment" Nothing
-            <*> aopt passwordField "Password" Nothing
+    Comment <$> areq textField nameField (userScreenName . entityVal <$> musr)
+            <*> (unTextarea <$> areq textareaField commentField Nothing)
+            <*> pure Nothing
             <*> pure time
             <*> pure art
+
+commentForm :: Maybe Comment -> Article -> Form Comment
+commentForm mcom art html = do
+  Entity key _ <- lift $ runDB $ getBy404 $
+                    UniqueArticle (articleCreatedDate art) (articleTitle art)
+  commentForm' mcom key html
 
 postCreateR :: Handler RepHtml
 postCreateR = do
@@ -92,9 +154,11 @@ getArticleR date text = do
     comments <- map entityVal <$> selectList [CommentArticle ==. key] []
     tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
     return (article, author, comments, tags)
+  ((_, cWidget), cEnctype) <- generateFormPost $ commentForm Nothing article
   let title  = articleTitle article
       editable = maybe False (== articleAuthor article) musr
       posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
+      mCommentForm = Just (cWidget, cEnctype)
   blogTitle <- getBlogTitle
   body <- markupRender article
   defaultLayout $ do
@@ -123,6 +187,7 @@ putArticleR day title = do
          else permissionDenied "You are not allowed to edit this article."
     _ -> do
       setMessageI MsgInvalidInput
+      let mCommentForm = Nothing :: Maybe (Widget, Text)
       defaultLayout $(widgetFile "edit-article")
 
 getDeleteR :: Day -> Text -> Handler RepHtml
@@ -130,15 +195,20 @@ getDeleteR = deleteArticleR
 
 getModifyR :: Day -> Text -> Handler RepHtml
 getModifyR day title = do
-  (art, tags) <- runDB $ do
+  (artId, art, tags) <- runDB $ do
     Entity key art <- getBy404 $ UniqueArticle (fromEnum day) title
     tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
-    return (art, tags)
+    return (key, art, tags)
   ((_, widget), enctype) <- generateFormPost $ articleForm' (Just art) (Just tags)
+  ((_, cWidget), cEnctype) <- generateFormPost $ commentDeleteForm artId
+  let mCommentForm = Just (cWidget, cEnctype)
   defaultLayout $ do
     addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
     setTitleI $ MsgEdit title
     $(widgetFile "edit-article")
+
+postDeleteCommentR :: Day -> Text -> Handler ()
+postDeleteCommentR = deleteCommentR
 
 postModifyR :: Day -> Text -> Handler RepHtml
 postModifyR = putArticleR
@@ -156,14 +226,42 @@ deleteArticleR day title = do
     else do
       permissionDenied "You are not allowed to delete that article."
 
-postCommentR :: Day -> Text -> Handler ()
-postCommentR = undefined
+postCommentR :: Day -> Text -> Handler RepHtml
+postCommentR date title = do
+  Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) title
+  ((result, widget), enctype) <- runFormPost $ commentForm' Nothing key
+  case result of
+    FormSuccess comment -> do
+      ans <- runDB $ insertBy comment
+      case ans of
+        Right _ -> do
+           redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
+        Left _ -> do
+           setMessageI $ MsgAlreadyExists $ articleTitle article
+           redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
+    _ -> do
+      setMessageI MsgInvalidInput
+      redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
 
 putCommentR :: Day -> Text -> Handler ()
 putCommentR = undefined
 
 deleteCommentR :: Day -> Text -> Handler ()
-deleteCommentR = undefined
+deleteCommentR day title = do
+  Entity uid usr <- requireAuth
+  Entity aid art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) title
+  ((result, _), _) <- runFormPost $ commentDeleteForm aid
+  when (uid /= articleAuthor art) $ do
+    permissionDenied "You are not allowed to delete those comment(s)."
+  case result of
+    FormSuccess cs -> do
+      when (any ((/= aid) . commentArticle) cs) $ permissionDenied "You can't delete that comment."
+      runDB $ mapM_ (\c -> deleteBy $ UniqueComment aid (commentAuthor c) (commentCreatedAt c)) cs
+      redirect $ ArticleR day title
+    _ -> do
+      setMessageI MsgInvalidInput
+      redirect $ ModifyR day title
+  
 
 getRssR :: Day -> Text -> Handler RepRss
 getRssR = undefined
@@ -176,6 +274,7 @@ postPreviewR = do
     FormSuccess (article, tags) -> do
       let editable = False
           comments = []
+          mCommentForm = Nothing :: Maybe (Widget, Text)
           title    = articleTitle article
           posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
           date     = toEnum $ articleCreatedDate article

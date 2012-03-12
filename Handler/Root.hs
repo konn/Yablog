@@ -16,7 +16,8 @@ getRootR = do
     as <- map entityVal <$> selectList [] [Asc ArticleCreatedDate, Asc ArticleCreatedTime, LimitTo 5 :: SelectOpt Article]
     zip as <$> mapM (get404 . articleAuthor) as
   articles <- mapM (\(art, auth) -> (,,) art auth <$> markupRender art) as
+  title <- getBlogTitle
   defaultLayout $ do
     h2id <- lift newIdent
-    setTitle "Yablog homepage"
+    setTitle $ toHtml $ "Home - " `T.append` title
     $(widgetFile "homepage")
