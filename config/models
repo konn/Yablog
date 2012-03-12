@@ -5,6 +5,7 @@ User
     email Text Maybe
     locale Text default="ja"
     profile Text default=""
+    amazon Text Maybe
     UniqueUser ident
     UserName screenName
 

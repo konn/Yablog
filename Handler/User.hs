@@ -1,5 +1,6 @@
 module Handler.User where
 import Import
+import Control.Monad
 import qualified Data.Text as T
 
 userForm :: Form User
@@ -10,6 +11,7 @@ userForm html = do
       email      = userEmail user
       locale     = userLocale user
       profile    = userProfile user
+      amazon     = userAmazon user
       langs      = [("Japanese" :: Text, "ja"), ("English", "en")]
   flip renderBootstrap html $ do
     User <$> pure ident
@@ -18,6 +20,7 @@ userForm html = do
          <*> aopt textField "email" (Just email)
          <*> areq (selectFieldList langs ) "locale" (Just locale)
          <*> (T.filter (/= '\r') . unTextarea <$> areq textareaField "profile" (Just $ Textarea profile))
+         <*> aopt textField "Amazon Associate" (Just amazon)
 
 getUserSettingsR :: Handler RepHtml
 getUserSettingsR = do

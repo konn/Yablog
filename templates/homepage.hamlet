@@ -1,9 +1,9 @@
 <h2>Articles
-$forall (art, author) <- articles
+$forall (art, author, body) <- articles
   <article .well .article>
     <h2>
       <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)}>
         #{articleTitle art}
     <div .author>
       #{userIdent author}
-    #{renderMarkdown $ articleBody art}
+    #{body}

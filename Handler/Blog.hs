@@ -80,6 +80,7 @@ getCreateR :: Handler RepHtml
 getCreateR = do
   ((_, widget), enctype) <- generateFormPost articleForm
   defaultLayout $ do
+    addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
     $(widgetFile "post-article")
 
 getArticleR :: Day -> Text -> Handler RepHtml
@@ -92,9 +93,10 @@ getArticleR date text = do
     tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
     return (article, author, comments, tags)
   let title  = articleTitle article
-      body   = renderMarkdown $ articleBody article
       editable = maybe False (== articleAuthor article) musr
+      posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
   blogTitle <- getBlogTitle
+  body <- markupRender article
   defaultLayout $ do
     setTitle $ toHtml $ T.concat [title, " - ", blogTitle]
     addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
@@ -134,6 +136,7 @@ getModifyR day title = do
     return (art, tags)
   ((_, widget), enctype) <- generateFormPost $ articleForm' (Just art) (Just tags)
   defaultLayout $ do
+    addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
     setTitleI $ MsgEdit title
     $(widgetFile "edit-article")
 
@@ -173,9 +176,10 @@ postPreviewR = do
     FormSuccess (article, tags) -> do
       let editable = False
           comments = []
-          body     = renderMarkdown $ articleBody article
           title    = articleTitle article
+          posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
           date     = toEnum $ articleCreatedDate article
+      body <- markupRender article
       defaultLayout $ do
         addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
         $(widgetFile "article")
@@ -189,3 +193,4 @@ getTagR tag = do
   defaultLayout $ do
     setTitleI $ MsgArticlesForTag tag
     $(widgetFile "tag")
+

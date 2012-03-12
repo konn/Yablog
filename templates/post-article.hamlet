@@ -14,6 +14,4 @@
         <input type=submit .btn>
 
     <div .tab-pane #preview>
-      <iframe src=@{PreviewR} #preview-contents .span7 height="100%">
-
-
+      <iframe src=@{PreviewR} #preview-contents .span7>

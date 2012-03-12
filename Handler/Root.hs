@@ -12,10 +12,10 @@ import Import
 -- inclined, or create a single monolithic file.
 getRootR :: Handler RepHtml
 getRootR = do
-  articles <- runDB $ do
+  as <- runDB $ do
     as <- map entityVal <$> selectList [] [Asc ArticleCreatedDate, Asc ArticleCreatedTime, LimitTo 5 :: SelectOpt Article]
     zip as <$> mapM (get404 . articleAuthor) as
-  let render = writeHtml defaultWriterOptions . readMarkdown defaultParserState
+  articles <- mapM (\(art, auth) -> (,,) art auth <$> markupRender art) as
   defaultLayout $ do
     h2id <- lift newIdent
     setTitle "Yablog homepage"

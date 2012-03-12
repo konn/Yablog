@@ -14,6 +14,7 @@ module Foundation
     , module Model
     , getBlogTitle
     , getBlogDescription
+    , markupRender
     , isAdmin
     ) where
 
@@ -41,6 +42,7 @@ import Text.Jasmine (minifym)
 import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
 import Data.List (nub)
+import Data.Maybe
 #if DEVELOPMENT
 import qualified Data.Text.Lazy.Encoding
 #else
@@ -50,6 +52,7 @@ import Data.Time
 import System.Locale
 import Control.Applicative
 import qualified Data.Text as T
+import Markups
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -100,6 +103,14 @@ isAdmin :: User -> GHandler sub Yablog Bool
 isAdmin usr = do
   as <- extraAdmins . appExtra . settings <$> getYesod
   return $ userIdent usr `elem` as
+
+markupRender :: Article -> GHandler sub Yablog Html
+markupRender article = do
+  extra <- appExtra . settings <$> getYesod
+  usr <- runDB $ get404 $ articleAuthor article
+  let markup = fromMaybe "markdown" $ extraMarkup extra
+      trans  = maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr
+  return $ renderMarkup markup trans $ articleBody article
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
@@ -178,7 +189,7 @@ instance YesodAuth Yablog where
             Just (Entity uid _) -> return $ Just uid
             Nothing -> do
                 fmap Just $ insert $
-                  User (credsIdent creds) (credsIdent creds) Nothing Nothing "ja" ""
+                  User (credsIdent creds) (credsIdent creds) Nothing Nothing "ja" "" Nothing
 
     -- You can add other plugins like BrowserID, email or OAuth here
     authPlugins _ = [authBrowserId, authGoogleEmail]
