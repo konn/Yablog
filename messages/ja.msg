@@ -12,3 +12,4 @@ Preview: プレビュー
 InvalidInput: 入力が不正です。
 AlreadyExists title@T.Text: 「#{title}」と既に同名の記事が存在します。
 ArticlesForTag tag@T.Text: 「#{tag}」タグの記事一覧
+Articles: 記事一覧

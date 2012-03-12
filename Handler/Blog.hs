@@ -41,6 +41,17 @@ articleForm' mart mtags htm = do
                 tags = T.words . fromMaybe "" <$> aopt textField tagsSettings (Just . T.unwords <$> mtags)
             in (,) <$> art <*> tags
 
+commentForm' :: Maybe Comment -> ArticleId -> Form Comment
+commentForm' mcom art html = do
+  musr <- lift  maybeAuth
+  time <- liftIO getCurrentTime
+  flip renderBootstrap html $
+    Comment <$> areq textField "Author" (userScreenName . entityVal <$> musr)
+            <*> areq textField "Comment" Nothing
+            <*> aopt passwordField "Password" Nothing
+            <*> pure time
+            <*> pure art
+
 postCreateR :: Handler RepHtml
 postCreateR = do
   ((result, widget), enctype) <- runFormPost articleForm
@@ -165,7 +176,8 @@ postPreviewR = do
           body     = renderMarkdown $ articleBody article
           title    = articleTitle article
           date     = toEnum $ articleCreatedDate article
-      defaultLayout $
+      defaultLayout $ do
+        addScriptRemote "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
         $(widgetFile "article")
     _ -> notFound
 

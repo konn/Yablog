@@ -20,7 +20,7 @@ Article
 Comment
   author    Text Eq
   body      Text
-  password  String
+  password  Text Maybe
   createdAt UTCTime Asc
   article   ArticleId
 

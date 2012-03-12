@@ -12,3 +12,4 @@ Preview: Preview
 InvalidInput: Invalid inputs. Try it again.
 AlreadyExists title@T.Text: The article "#{title}" already exists.
 ArticlesForTag tag@T.Text: Articles tagged with "#{tag}"
+Articles: Articles
