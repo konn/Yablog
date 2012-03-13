@@ -23,9 +23,12 @@ import Settings.StaticFiles
 import Text.Pandoc hiding (Null)
 import Yesod.Auth
 import Data.Time
+import Control.Monad
 
 articleView :: Article -> Widget
 articleView article = do
+  render <- lift getUrlRender
+  let route = Just $ render $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
   musr <- lift maybeAuthId
   (author, tags) <- lift $ runDB $ do
     Entity key _ <- getBy404 $ UniqueArticle (articleCreatedDate article) (articleTitle article)
@@ -33,6 +36,7 @@ articleView article = do
     tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
     return (userScreenName author, tags)
   body <- lift $ markupRender article
+  blogTitle <- lift getBlogTitle
   let title  = articleTitle article
       editable = maybe False (== articleAuthor article) musr
       date = toEnum $ articleCreatedDate article

@@ -269,6 +269,8 @@ postPreviewR = do
           title    = articleTitle article
           posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
           date     = toEnum $ articleCreatedDate article :: Day
+          route    = Nothing :: Maybe Text
+      blogTitle <- getBlogTitle
       body <- markupRender article
       defaultLayout $ do
         $(widgetFile "article-view")

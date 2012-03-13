@@ -21,6 +21,20 @@
 
         <script>
           document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/,'js');
+        $maybe hatenastar <- extraHatenaStar $ appExtra $ settings master
+          <script type="text/javascript" src="http://s.hatena.ne.jp/js/HatenaStar.js">
+          <script type="text/javascript">
+            Hatena.Star.Token = '#{hatenastar}';
+            Hatena.Star.SiteConfig = {
+              entryNodes: {
+                'article.article': {
+                  uri: 'h1.article-title a',
+                  title: 'h1.article-title',
+                  container: 'h1.article-title'
+                }
+              }
+            };
+        <script type="text/javascript" src="http://b.st-hatena.com/js/bookmark_button_wo_al.js" charset="utf-8" async="async">
     <body>
         <div .container>
             ^{pageBody pc}

@@ -1,5 +1,5 @@
-<article>
-  <h1>
+<article .article>
+  <h1 .article-title>
     <a href=@{ArticleR date title}>
       #{title}
   <div .article-desc>
@@ -21,6 +21,13 @@
             <li>
               <a href=@{TagR tag}>
                 #{tag}
+    $maybe r <- route
+      <div .social>
+        <i .icon-bookmark> #
+        Bookmarks #
+        <a href="http://b.hatena.ne.jp/entry/#{r}" class="hatena-bookmark-button" data-hatena-bookmark-title="#{title} - #{blogTitle}" data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加">
+          <img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;"> #
+        <span #delicious-count>
   <div .article-body .show-grid>
     #{body}
     $if editable
