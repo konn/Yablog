@@ -22,3 +22,5 @@ CreatedTime: 作成時間
 Name: 名前
 Comment: コメント
 DeleteComment: コメント削除
+Tweet: ツイート
+

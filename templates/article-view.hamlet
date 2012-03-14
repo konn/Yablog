@@ -24,10 +24,15 @@
     $maybe r <- route
       <div .social>
         <i .icon-bookmark> #
-        Bookmarks #
-        <a href="http://b.hatena.ne.jp/entry/#{r}" class="hatena-bookmark-button" data-hatena-bookmark-title="#{title} - #{blogTitle}" data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加">
+        <div .social-item class="fb-like" data-href="#{r}" data-send="false" data-show-faces="false" data-layout="button_count">
+        <a .social-item href="http://b.hatena.ne.jp/entry/#{r}" class="hatena-bookmark-button" data-hatena-bookmark-title="#{title} - #{blogTitle}" data-hatena-bookmark-layout="standard" title="このエントリーをはてなブックマークに追加">
           <img src="http://b.st-hatena.com/images/entry-button/button-only.gif" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;"> #
-        <span #delicious-count>
+        <span .social-item>
+          <g:plusone href=#{r}></g:plusone>
+        <a href="https://twitter.com/share" class="twitter-share-button" data-url="#{r}" data-text="#{title} - #{blogTitle}" data-via="mr_konn" data-lang="ja">
+          _{MsgTweet}
+        <script>
+         !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
   <div .article-body .show-grid>
     #{body}
     $if editable

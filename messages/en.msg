@@ -22,3 +22,4 @@ CreatedTime: Created time
 Name: Name
 Comment: Comment
 DeleteComment: Delete Comments
+Tweet: Tweet
