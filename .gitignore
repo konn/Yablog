@@ -6,3 +6,5 @@ dist
 db
 static/tmp
 deploy
+\#*\#
+.\#*

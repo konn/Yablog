@@ -14,6 +14,6 @@
 /article/#Day/#T.Text/comment CommentR POST PUT DELETE
 /tag/#T.Text TagR GET
 /article/#Day/#T.Text/comment/delete DeleteCommentR POST
-/article/#Day/#T.Text/trackback TrackbackR POST
+/article/#Day/#T.Text/trackback TrackbackR GET POST
 
 /user/settings UserSettingsR GET PUT POST
