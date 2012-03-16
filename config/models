@@ -30,4 +30,11 @@ Tag
   article ArticleId Eq
   name    Text Eq
 
+Trackback
+  article ArticleId Eq
+  title Text Eq Maybe
+  excerpt Text Maybe
+  url Text Eq
+  blogName Text Maybe
+
  -- By default this file is used in Model.hs (which is imported by Foundation.hs)

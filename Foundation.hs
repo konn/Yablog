@@ -6,7 +6,6 @@ module Foundation
     , Handler
     , Widget
     , Form
-    , RepRss (..)
     , YablogDate (..)
     , maybeAuth
     , requireAuth
@@ -22,6 +21,8 @@ import Prelude
 import Yesod
 import Yesod.Static
 import Settings.StaticFiles
+import Yesod.RssFeed
+import Yesod.AtomFeed
 import Yesod.Auth
 import Yesod.Auth.BrowserId
 import Yesod.Auth.GoogleEmail
@@ -123,6 +124,8 @@ instance Yesod Yablog where
 
     defaultLayout widget = do
         musr <- maybeAuth
+        let rss  = rssLink FeedR "RSS Link"
+            atom = atomLink FeedR "Atom Link"
         accessible <- maybe (return False) (isAdmin . entityVal) musr
         master <- getYesod
         mmsg <- getMessage
@@ -227,7 +230,3 @@ instance Read YablogDate where
 instance PathPiece Day where
   toPathPiece = T.pack . formatTime defaultTimeLocale "%Y%m%d"
   fromPathPiece = Data.Time.parseTime defaultTimeLocale "%Y%m%d" . T.unpack
-
-newtype RepRss = RepRss Content
-instance HasReps RepRss where
-  chooseRep (RepRss c) _ = return (typeRss, c)

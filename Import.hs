@@ -6,6 +6,7 @@ module Import
     , module Control.Applicative
     , module Settings.StaticFiles
     , module Text.Pandoc
+    , module Forms
     , Text
     , articleView
 #if __GLASGOW_HASKELL__ < 740
@@ -23,7 +24,7 @@ import Settings.StaticFiles
 import Text.Pandoc hiding (Null)
 import Yesod.Auth
 import Data.Time
-import Control.Monad
+import Forms
 
 articleView :: Article -> Widget
 articleView article = do

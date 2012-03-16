@@ -1,9 +1,31 @@
 ^{articleView article}
+$if (not $ null trackbacks)
+  <h2>
+    <a name="trackbacks">
+    _{MsgTrackbacks}
+  <div>
+    Trackback URL:
+    <input type="url" value="#{render $ TrackbackR date title}">
+  <ul .trackbacks>
+    $forall t <- trackbacks
+      <li .trackback>
+        <a href="#{trackbackUrl t}">
+          #{fromMaybe (trackbackUrl t) $ trackbackTitle t}
+$else
+  <h2>
+    <a name="trackbacks">
+    _{MsgNoTrackbacks}
+  <div>
+    Trackback URL:
+    <input type="url" value="#{render $ TrackbackR date title}">
+
 
 $if (not $ null comments)
-    <h2>_{MsgComments}
+    <h2>
+      <a name="comments">
+      _{MsgComments}
     $forall c <- comments
-      <article .comment .well>
+      <article .comment .well #comment-#{commentAuthor c}-#{formatTime defaultTimeLocale "%Y-%m-%d-%H-%M-%S" (commentCreatedAt c)}>
         <div .comment-body>
           #{commentBody c}
         <div .comment-desc>
@@ -13,6 +35,10 @@ $if (not $ null comments)
           <div .comment-date>
             <i .icon-calendar>
             #{show $ commentCreatedAt c}
+$else
+  <h2>
+    <a name="comments">
+    _{MsgNoComments}  
 
 $maybe (widget, enc) <- mCommentForm
     <h2>_{MsgLeaveComment}

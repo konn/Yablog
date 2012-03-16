@@ -2,3 +2,9 @@
 $forall art <- articles
   <div .well>
     ^{articleView art}
+    <div .navi-links>
+      <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)}>
+        Permalink
+      \ | #
+      <a href="@{ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)}#comments">
+        Comments
