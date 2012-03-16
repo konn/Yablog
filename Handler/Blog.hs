@@ -127,17 +127,16 @@ postCommentR date title = do
       case ans of
         Right _ -> do
            render <- getUrlRender
-           let anchor = T.concat ["comment-", commentAuthor comment, "-"
-                                 ,T.pack $ formatTime defaultTimeLocale "%Y-%m-%d-%H-%M-%S" $ commentCreatedAt comment]
+           let anchor = commentAnchor comment
            let url = T.concat [render $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
                               , "#", anchor
                               ]
            notice (articleAuthor article) $
              T.unlines [ T.concat ["You have new comment on your article: "
-                                  , render (ArticleR date title)
-                                  , "#", anchor
+                                  , url
                                   ]
                        , commentBody comment
+                       , "by " `T.append` commentAuthor comment
                        ]
            redirect url
         Left _ -> do

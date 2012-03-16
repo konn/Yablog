@@ -4,7 +4,6 @@ import Import
 import Yesod.Feed
 import Control.Arrow
 import Data.Time
-import Data.List
 import Data.Maybe
 
 -- This is a handler function for the GET request method on the RootR

@@ -44,7 +44,6 @@ articleView article = do
       posted = show $ UTCTime date (toEnum $ articleCreatedTime article)
   $(widgetFile "article-view")
 
-
 #if __GLASGOW_HASKELL__ < 740
 infixr 5 <>
 (<>) :: Monoid m => m -> m -> m

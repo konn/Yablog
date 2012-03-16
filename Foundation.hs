@@ -16,6 +16,7 @@ module Foundation
     , markupRender
     , isAdmin
     , notice
+    , commentAnchor
     ) where
 
 import Prelude
@@ -52,6 +53,8 @@ import Control.Applicative
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import Markups
+import Network.HTTP.Types
+
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -243,3 +246,10 @@ notice usrId msg = do
                       , mailHeaders = []
                       , mailParts   = [[body]]}
       liftIO $ renderSendMail mail
+
+commentAnchor :: Comment -> T.Text
+commentAnchor c = T.concat [ "comment-"
+                           , T.decodeUtf8 $ urlEncode True $ T.encodeUtf8 $ commentAuthor c
+                           , "-"
+                           , T.pack $ formatTime defaultTimeLocale "%Y-%m-%d-%H-%M-%S" $ commentCreatedAt c
+                           ]
