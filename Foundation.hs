@@ -15,6 +15,7 @@ module Foundation
     , getBlogDescription
     , markupRender
     , isAdmin
+    , notice
     ) where
 
 import Prelude
@@ -44,16 +45,12 @@ import Web.ClientSession (getKey)
 import Text.Hamlet (hamletFile)
 import Data.List (nub, sort)
 import Data.Maybe
-#if DEVELOPMENT
-import qualified Data.Text.Lazy.Encoding
-#else
-import Network.Mail.Mime (sendmail)
-#endif
+import Network.Mail.Mime
 import Data.Time
 import System.Locale
 import Control.Applicative
-import Control.Monad
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import Markups
 
 -- | The site argument for your application. This can be a good place to
@@ -207,11 +204,7 @@ instance YesodAuth Yablog where
 
 -- Sends off your mail. Requires sendmail in production!
 deliver :: Yablog -> L.ByteString -> IO ()
-#ifdef DEVELOPMENT
-deliver y = logLazyText (getLogger y) . Data.Text.Lazy.Encoding.decodeUtf8
-#else
 deliver _ = sendmail
-#endif
 
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
@@ -230,3 +223,23 @@ instance Read YablogDate where
 instance PathPiece Day where
   toPathPiece = T.pack . formatTime defaultTimeLocale "%Y%m%d"
   fromPathPiece = Data.Time.parseTime defaultTimeLocale "%Y%m%d" . T.unpack
+
+notice :: UserId -> T.Text -> Handler ()
+notice usrId msg = do
+  usr <- runDB $ get404 usrId
+  extra <- appExtra . settings <$> getYesod
+  case (,) <$> extraMailAddress extra <*> userEmail usr of
+    Just (addr, to) -> do
+      let body = Part { partType     = "text/plain"
+                      , partEncoding = Base64
+                      , partFilename = Nothing
+                      , partHeaders  = []
+                      , partContent  = L.fromChunks [T.encodeUtf8 msg]
+                      }
+          mail = Mail { mailFrom    = Address (Just $ extraTitle extra) addr
+                      , mailTo      = [Address (Just $ userScreenName usr) to]
+                      , mailCc      = []
+                      , mailBcc     = []
+                      , mailHeaders = []
+                      , mailParts   = [[body]]}
+      liftIO $ renderSendMail mail
