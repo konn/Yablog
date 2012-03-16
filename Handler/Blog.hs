@@ -190,22 +190,19 @@ getTagR tag = do
 postTrackbackR :: Day -> Text -> Handler RepXml
 postTrackbackR date title = do
   Entity aid _ <- runDB $ getBy404 $ UniqueArticle (fromEnum date) title
-  ((result, _), _) <- runFormPost $ trackbackForm aid
-  case result of
-    FormSuccess trackback -> do
-      ans <- runDB $ insertBy trackback
-      case ans of
-        Right _ -> return $ mkXmlResponse [xml|<error>0|]
-        Left  _ -> return $ mkXmlResponse
-                   [xml|
-                     <error>1
-                     <message>Already exists.
-                   |]
-    _ -> return $ mkXmlResponse
-           [xml|
-             <error>1
-             <message>Not enough parameters
-           |]
+  trackback <- runInputPost $
+    Trackback aid <$> iopt textField "title"
+                  <*> (liftM unTextarea <$> iopt textareaField "excerpt")
+                  <*> ireq textField "url"
+                  <*> iopt textField "blog_name"
+  ans <- runDB $ insertBy trackback
+  case ans of
+    Right _ -> return $ mkXmlResponse [xml|<error>0|]
+    Left  _ -> return $ mkXmlResponse
+               [xml|
+                 <error>1
+                 <message>Already exists.
+               |]
 
 getTrackbackR :: Day -> Text -> Handler RepXml
 getTrackbackR date title = do
