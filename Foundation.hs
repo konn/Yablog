@@ -48,11 +48,10 @@ import Data.Time
 import System.Locale
 import Control.Applicative
 import qualified Data.Text as T
-import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Encoding as T
 import Markups
 import Network.HTTP.Types
-
+import qualified Data.ByteString.Lazy.Char8 as LBS
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -225,19 +224,22 @@ instance PathPiece Day where
   toPathPiece = T.pack . formatTime defaultTimeLocale "%Y%m%d"
   fromPathPiece = Data.Time.parseTime defaultTimeLocale "%Y%m%d" . T.unpack
 
-notice :: UserId -> T.Text -> Handler ()
-notice usrId msg = do
+notice :: UserId -> T.Text -> T.Text -> Handler ()
+notice usrId title msg = do
   usr <- runDB $ get404 usrId
   extra <- appExtra . settings <$> getYesod
   case (,) <$> extraMailAddress extra <*> userEmail usr of
     Just (addr, to) -> do
-      liftIO $ renderSendMail
-                =<< simpleMail (Address (Just $ userScreenName usr) to)
-                               (Address (Just $ extraTitle extra) addr)
-                               "New Comments"
-                               (LT.fromChunks [msg])
-                               ""
-                               []
+      let body = Part "text/plain; charset=utf-8" QuotedPrintableText Nothing [] $ LBS.fromChunks [T.encodeUtf8 msg]
+          mail = Mail { mailFrom = Address (Just $ extraTitle extra) addr
+                      , mailTo   = [Address (Just $ userScreenName usr) to]
+                      , mailHeaders = [("Subject", title)]
+                      , mailCc      = []
+                      , mailBcc     = []
+                      , mailParts   = [[body]]
+                      }
+      -- liftIO $ LBS.putStrLn =<< renderMail' mail
+      liftIO $ renderSendMail mail
     Nothing -> return ()
 
 commentAnchor :: Comment -> T.Text

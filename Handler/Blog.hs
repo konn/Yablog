@@ -130,7 +130,7 @@ postCommentR date ident = do
            let url = T.concat [render $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
                               , "#", anchor
                               ]
-           notice (articleAuthor article) $
+           notice (articleAuthor article) "New Comments" $
              T.unlines [ T.concat ["You have new comment on your article: "
                                   , url
                                   ]
