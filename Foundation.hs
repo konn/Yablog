@@ -231,6 +231,7 @@ notice usrId msg = do
   extra <- appExtra . settings <$> getYesod
   case (,) <$> extraMailAddress extra <*> userEmail usr of
     Just (addr, to) -> do
+      liftIO $ print (addr, to)
       liftIO $ renderSendMail
                 =<< simpleMail (Address (Just $ extraTitle extra) addr)
                                (Address (Just $ userScreenName usr) to)
@@ -238,7 +239,7 @@ notice usrId msg = do
                                (LT.fromChunks [msg])
                                ""
                                []
-    Nothing -> return ()
+    Nothing -> liftIO (putStrLn "nothing to be done.") >> return ()
 
 commentAnchor :: Comment -> T.Text
 commentAnchor c = T.concat [ "comment-"
