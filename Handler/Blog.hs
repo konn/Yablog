@@ -134,7 +134,7 @@ postCommentR date ident = do
            notice (articleAuthor article) (msgRender MsgNewComment) $
              T.unlines [ msgRender (MsgYouHaveNewCommentFor url)
                        , ""
-                       , commentBody comment
+                       , "\"" `T.append` commentBody comment `T.append` "\""
                        , "\nby " `T.append` commentAuthor comment
                        ]
            redirect url
