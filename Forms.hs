@@ -11,6 +11,10 @@ import Data.Text (Text)
 import Data.Time
 import Control.Monad
 import Data.Maybe
+import Settings
+import Control.Arrow
+import Markups
+import Yesod.Default.Config
 import qualified Data.Text as T
 
 articleForm :: Form (Article, [Text])
@@ -24,6 +28,7 @@ articleForm' mart mtags htm = do
     unless accessible $ do
       permissionDenied "You are not in admins"
   now  <- liftIO getCurrentTime
+  markup <- extraMarkup . appExtra . settings <$> lift getYesod
   ident <- maybe (lift newIdent) return $ articleIdent <$> mart
   let day  = utctDay now
       time = timeToTimeOfDay $ utctDayTime now
@@ -66,9 +71,17 @@ articleForm' mart mtags htm = do
                                               , fsClass   = []
                                               , fsTooltip = Nothing
                                               }
+                markupSettings = FieldSettings { fsLabel = "Markup" :: Text
+                                               , fsName  = Just "markup"
+                                               , fsId    = Just "markup"
+                                               , fsClass = []
+                                               , fsTooltip = Nothing
+                                               }
                 art = Article <$> pure usrId
                               <*> areq textField titleSettings (articleTitle <$> mart)
                               <*> areq textField identSettings (Just ident)
+                              <*> aopt (selectFieldList $ map ((T.pack &&& id).fst) readers) markupSettings
+                                       (Just $ (articleMarkup =<< mart) <|> markup)
                               <*> (T.unpack . T.filter (/='\r') . unTextarea <$>
                                     areq textareaField bodySettings
                                              (Textarea . T.pack . articleBody <$> mart))

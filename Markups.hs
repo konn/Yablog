@@ -8,7 +8,7 @@ import Data.List
 import qualified Data.CaseInsensitive as CI
 import Blaze.ByteString.Builder
 import Text.Pandoc
-import Yesod
+import Yesod hiding (insert)
 import Data.Maybe
 import Prelude
 import Data.Char
@@ -55,7 +55,8 @@ attachTo key url | (p@("http:":"":amazon:paths), qs) <- decodePath (BS.pack url)
                  , let cipath = map CI.mk paths
                  , ["o", "asin"] `isPrefixOf` cipath || "dp" `elem` cipath
                                   || ["gp", "product"] `isPrefixOf` cipath
-                 = tail $ BS.unpack $ toByteString $ encodePath p (("tag", Just $ BS.pack key):qs)
+                 , isNothing (lookup "tag" qs)
+                 = tail $ BS.unpack $ toByteString $ encodePath p (("tag",Just $ BS.pack key):qs)
 attachTo _   url = url
 
 

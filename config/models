@@ -13,6 +13,7 @@ Article
   author     UserId  Eq
   title      Text  Eq
   ident      Text Eq
+  markup     String Maybe
   body       String
   createdDate Int Gt Lt Eq Desc
   createdTime Int Gt Lt Eq Desc

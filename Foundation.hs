@@ -108,7 +108,7 @@ markupRender :: Article -> GHandler sub Yablog Html
 markupRender article = do
   extra <- appExtra . settings <$> getYesod
   usr <- runDB $ get404 $ articleAuthor article
-  let markup = fromMaybe "markdown" $ extraMarkup extra
+  let markup = fromMaybe "markdown" $ articleMarkup article <|> extraMarkup extra
       trans  = maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr
   return $ renderMarkup markup trans $ articleBody article
 
