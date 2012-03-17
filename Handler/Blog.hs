@@ -130,12 +130,12 @@ postCommentR date ident = do
            let url = T.concat [render $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
                               , "#", anchor
                               ]
-           notice (articleAuthor article) "New Comments" $
-             T.unlines [ T.concat ["You have new comment on your article: "
-                                  , url
-                                  ]
+           msgRender <- getMessageRender
+           notice (articleAuthor article) (msgRender MsgNewComment) $
+             T.unlines [ msgRender (MsgYouHaveNewCommentFor url)
+                       , ""
                        , commentBody comment
-                       , "by " `T.append` commentAuthor comment
+                       , "\nby " `T.append` commentAuthor comment
                        ]
            redirect url
         Left _ -> do
