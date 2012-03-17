@@ -15,11 +15,13 @@ import Data.Maybe
 -- inclined, or create a single monolithic file.
 getRootR :: Handler RepHtml
 getRootR = do
-  articles <- runDB $
-    map entityVal <$> selectList [] [LimitTo 5, Desc ArticleCreatedDate, Desc ArticleCreatedTime]
+  articles <- runDB $ do
+    as <- selectList [] [LimitTo 5, Desc ArticleCreatedDate, Desc ArticleCreatedTime]
+    cs <- mapM (\(Entity key _) -> count [CommentArticle ==. key]) as
+    ts <- mapM (\(Entity key _) -> count [TrackbackArticle ==. key]) as
+    return $ zip3 (map entityVal as) cs ts
   title <- getBlogTitle
   defaultLayout $ do
-    h2id <- lift newIdent
     setTitle $ toHtml $ "Home - " `T.append` title
     $(widgetFile "homepage")
 
@@ -31,7 +33,6 @@ getFeedR = do
                                               , Desc ArticleCreatedDate
                                               , Desc ArticleCreatedTime
                                               ]
-  now <- liftIO getCurrentTime
   let ts = map (uncurry UTCTime . ((toEnum . articleCreatedDate) &&& (toEnum . articleCreatedTime))) arts
            ++ mapMaybe articleModifiedAt arts
   es <- mapM toFeedEntry arts

@@ -2,7 +2,7 @@
 <ul>
   $forall art <- sortBy (flip $ on compare articleCreatedDate) articles
     <li>
-      <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)}>
+      <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}>
         #{show $ ModifiedJulianDay $ toInteger $ articleCreatedDate art}
         \ #{show $ timeToTimeOfDay $ toEnum $ articleCreatedTime art}
         \ - #{articleTitle art}

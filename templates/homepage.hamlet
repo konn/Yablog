@@ -1,10 +1,19 @@
 <h2>Recent Articles
-$forall art <- articles
+$forall (art, cs, ts) <- articles
   <div .well>
     ^{articleView art}
     <div .navi-links>
-      <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)}>
+      <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}>
         Permalink
       \ | #
-      <a href="@{ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)}#comments">
-        Comments
+      <a href="@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}#comments">
+        $if cs == 0
+          _{MsgNoComments}
+        $else
+          _{MsgComments} (#{cs})
+      \ | #
+      <a href="@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}#trackbacks">
+        $if ts == 0
+          _{MsgNoTrackbacks}
+        $else
+          _{MsgTrackbacks} (#{ts})

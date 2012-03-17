@@ -32,9 +32,6 @@ import Yesod.Default.Config
 import Yesod.Default.Util (addStaticContentExternal)
 import Yesod.Logger (Logger, logMsg, formatLogText)
 import Network.HTTP.Conduit (Manager)
-#ifdef DEVELOPMENT
-import Yesod.Logger (logLazyText)
-#endif
 import qualified Settings
 import qualified Data.ByteString.Lazy as L
 import qualified Database.Persist.Store
@@ -51,6 +48,7 @@ import Data.Time
 import System.Locale
 import Control.Applicative
 import qualified Data.Text as T
+import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Encoding as T
 import Markups
 import Network.HTTP.Types
@@ -233,19 +231,14 @@ notice usrId msg = do
   extra <- appExtra . settings <$> getYesod
   case (,) <$> extraMailAddress extra <*> userEmail usr of
     Just (addr, to) -> do
-      let body = Part { partType     = "text/plain"
-                      , partEncoding = Base64
-                      , partFilename = Nothing
-                      , partHeaders  = []
-                      , partContent  = L.fromChunks [T.encodeUtf8 msg]
-                      }
-          mail = Mail { mailFrom    = Address (Just $ extraTitle extra) addr
-                      , mailTo      = [Address (Just $ userScreenName usr) to]
-                      , mailCc      = []
-                      , mailBcc     = []
-                      , mailHeaders = []
-                      , mailParts   = [[body]]}
-      liftIO $ renderSendMail mail
+      liftIO $ renderSendMail
+                =<< simpleMail (Address (Just $ extraTitle extra) addr)
+                               (Address (Just $ userScreenName usr) to)
+                               "New Comments"
+                               (LT.fromChunks [msg])
+                               ""
+                               []
+    Nothing -> return ()
 
 commentAnchor :: Comment -> T.Text
 commentAnchor c = T.concat [ "comment-"

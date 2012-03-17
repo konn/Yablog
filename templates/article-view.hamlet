@@ -1,6 +1,6 @@
 <article .article>
   <h1 .article-title>
-    <a href=@{ArticleR date title}>
+    <a href=@{ArticleR date ident}>
       #{title}
   <div .article-desc>
     <div .author>
@@ -37,4 +37,4 @@
     #{body}
     $if editable
       <div style="text-align: right;">
-        <a href=@{ModifyR date title} .btn>_{MsgEditArticle} #
+        <a href=@{ModifyR date ident} .btn>_{MsgEditArticle} #

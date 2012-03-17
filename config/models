@@ -12,11 +12,12 @@ User
 Article
   author     UserId  Eq
   title      Text  Eq
+  ident      Text Eq
   body       String
   createdDate Int Gt Lt Eq Desc
   createdTime Int Gt Lt Eq Desc
   modifiedAt  UTCTime Maybe Gt Lt Eq Desc
-  UniqueArticle createdDate title
+  UniqueArticle createdDate ident
 
 Comment
   author    Text Eq

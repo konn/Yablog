@@ -29,10 +29,10 @@ import Forms
 articleView :: Article -> Widget
 articleView article = do
   render <- lift getUrlRender
-  let route = Just $ render $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
+  let route = Just $ render $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
   musr <- lift maybeAuthId
   (author, tags) <- lift $ runDB $ do
-    Entity key _ <- getBy404 $ UniqueArticle (articleCreatedDate article) (articleTitle article)
+    Entity key _ <- getBy404 $ UniqueArticle (articleCreatedDate article) (articleIdent article)
     author <- get404 (articleAuthor article)
     tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
     return (userScreenName author, tags)
@@ -42,6 +42,7 @@ articleView article = do
       editable = maybe False (== articleAuthor article) musr
       date = toEnum $ articleCreatedDate article
       posted = show $ UTCTime date (toEnum $ articleCreatedTime article)
+      ident = articleIdent article
   $(widgetFile "article-view")
 
 #if __GLASGOW_HASKELL__ < 740

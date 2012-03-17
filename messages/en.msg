@@ -24,5 +24,6 @@ Comment: Comment
 DeleteComment: Delete Comments
 Tweet: Tweet
 NoComments: No Comments
-Trackbacks: トラックバック
-NoTrackbacks: トラックバックなし
+Trackbacks: Trackbacks
+NoTrackbacks: No Trackbacks
+Identifier: Identifier

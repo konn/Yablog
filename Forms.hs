@@ -24,6 +24,7 @@ articleForm' mart mtags htm = do
     unless accessible $ do
       permissionDenied "You are not in admins"
   now  <- liftIO getCurrentTime
+  ident <- maybe (lift newIdent) return $ articleIdent <$> mart
   let day  = utctDay now
       time = timeToTimeOfDay $ utctDayTime now
   if maybe False ((/= usrId) . articleAuthor) mart
@@ -47,6 +48,12 @@ articleForm' mart mtags htm = do
                                               , fsClass = ["span8"]
                                               , fsTooltip = Nothing
                                               }
+                identSettings = FieldSettings { fsLabel = MsgIdentifier
+                                              , fsId = Just "ident"
+                                              , fsName = Just "ident"
+                                              , fsClass = ["span8"]
+                                              , fsTooltip = Nothing
+                                              }
                 cDateSettings = FieldSettings { fsLabel = MsgCreatedDate
                                               , fsId = Just "created_date"
                                               , fsName = Just "created_date"
@@ -61,6 +68,7 @@ articleForm' mart mtags htm = do
                                               }
                 art = Article <$> pure usrId
                               <*> areq textField titleSettings (articleTitle <$> mart)
+                              <*> areq textField identSettings (Just ident)
                               <*> (T.unpack . T.filter (/='\r') . unTextarea <$>
                                     areq textareaField bodySettings
                                              (Textarea . T.pack . articleBody <$> mart))
@@ -115,7 +123,7 @@ commentForm' mcom art html = do
 commentForm :: Maybe Comment -> Article -> Form Comment
 commentForm mcom art html = do
   Entity key _ <- lift $ runDB $ getBy404 $
-                    UniqueArticle (articleCreatedDate art) (articleTitle art)
+                    UniqueArticle (articleCreatedDate art) (articleIdent art)
   commentForm' mcom key html
 
 trackbackForm :: ArticleId -> Form Trackback

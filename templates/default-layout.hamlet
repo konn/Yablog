@@ -14,7 +14,7 @@ $maybe msg <- mmsg
           Recent Posts
         $forall art <- articles
           <li>
-            <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)}>
+            <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}>
               #{articleTitle art}
         <li .nav-header>
           <i .icon-tags> #
@@ -28,7 +28,7 @@ $maybe msg <- mmsg
           Recent Comments
         $forall (comment, article) <- comments
           <li>
-            <a href="@{ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)}##{commentAnchor comment}">
+            <a href="@{ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)}##{commentAnchor comment}">
               #{show $ utctDay $ commentCreatedAt comment} #{commentAuthor comment}
         <li .nav-header>
           Control

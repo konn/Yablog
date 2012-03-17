@@ -24,4 +24,6 @@ Comment: コメント
 DeleteComment: コメント削除
 Tweet: ツイート
 NoComments: コメントなし
-
+Trackbacks: トラックバック
+NoTrackbacks: トラックバックなし
+Identifier: 識別子

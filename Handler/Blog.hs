@@ -10,7 +10,6 @@ import Text.Hamlet.XML
 import Text.XML
 import Blaze.ByteString.Builder
 import Data.Maybe
-import System.Locale
 
 postCreateR :: Handler RepHtml
 postCreateR = do
@@ -28,7 +27,7 @@ postCreateR = do
           Left  _ -> return False
       if success
          then do
-           redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
+           redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
          else do
            setMessageI $ MsgAlreadyExists $ articleTitle article
            defaultLayout $(widgetFile "post-article")
@@ -43,10 +42,10 @@ getCreateR = do
     $(widgetFile "post-article")
 
 getArticleR :: Day -> Text -> Handler RepHtml
-getArticleR date title = do
+getArticleR date ident = do
   musr <- maybeAuthId
   (article, comments, trackbacks) <- runDB $ do
-    Entity key article <- getBy404 (UniqueArticle (fromEnum date) title)
+    Entity key article <- getBy404 (UniqueArticle (fromEnum date) ident)
     cs <- map entityVal <$> selectList [CommentArticle ==. key] []
     ts <- map entityVal <$> selectList [TrackbackArticle ==. key] []
     return (article, cs, ts)
@@ -55,18 +54,18 @@ getArticleR date title = do
   blogTitle <- getBlogTitle
   render <- getUrlRender
   defaultLayout $ do
-    setTitle $ toHtml $ T.concat [title, " - ", blogTitle]
+    setTitle $ toHtml $ T.concat [articleTitle article, " - ", blogTitle]
     $(widgetFile "article")
 
 putArticleR :: Day -> Text -> Handler RepHtml
-putArticleR day title = do
+putArticleR day ident = do
   ((result, widget), enctype) <- runFormPost articleForm
   usrId <- requireAuthId
   time  <- liftIO getCurrentTime
   case result of
     FormSuccess (article, tags) -> do
       suc <- runDB $ do
-        Entity key old <- getBy404 $ UniqueArticle (fromEnum day) title
+        Entity key old <- getBy404 $ UniqueArticle (fromEnum day) ident
         if articleAuthor old == usrId
           then do
             replace key article { articleModifiedAt = Just time }
@@ -75,7 +74,7 @@ putArticleR day title = do
             return True
           else return False
       if suc
-         then redirect $ ArticleR day $ articleTitle article
+         then redirect $ ArticleR day $ articleIdent article
          else permissionDenied "You are not allowed to edit this article."
     _ -> do
       setMessageI MsgInvalidInput
@@ -86,16 +85,16 @@ getDeleteR :: Day -> Text -> Handler RepHtml
 getDeleteR = deleteArticleR 
 
 getModifyR :: Day -> Text -> Handler RepHtml
-getModifyR day title = do
+getModifyR day ident = do
   (artId, art, tags) <- runDB $ do
-    Entity key art <- getBy404 $ UniqueArticle (fromEnum day) title
+    Entity key art <- getBy404 $ UniqueArticle (fromEnum day) ident
     tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
     return (key, art, tags)
   ((_, widget), enctype) <- generateFormPost $ articleForm' (Just art) (Just tags)
   ((_, cWidget), cEnctype) <- generateFormPost $ commentDeleteForm artId
   let mCommentForm = Just (cWidget, cEnctype)
   defaultLayout $ do
-    setTitleI $ MsgEdit title
+    setTitleI $ MsgEdit $ articleTitle art
     $(widgetFile "edit-article")
 
 postDeleteCommentR :: Day -> Text -> Handler ()
@@ -105,9 +104,9 @@ postModifyR :: Day -> Text -> Handler RepHtml
 postModifyR = putArticleR
 
 deleteArticleR :: Day -> Text -> Handler RepHtml
-deleteArticleR day title = do
+deleteArticleR day ident = do
   usrId  <- requireAuthId
-  Entity key art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) title
+  Entity key art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) ident
   if articleAuthor art == usrId
     then do
       runDB $ do
@@ -118,8 +117,8 @@ deleteArticleR day title = do
       permissionDenied "You are not allowed to delete that article."
 
 postCommentR :: Day -> Text -> Handler RepHtml
-postCommentR date title = do
-  Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) title
+postCommentR date ident = do
+  Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
   ((result, _), _) <- runFormPost $ commentForm' Nothing key
   case result of
     FormSuccess comment -> do
@@ -128,7 +127,7 @@ postCommentR date title = do
         Right _ -> do
            render <- getUrlRender
            let anchor = commentAnchor comment
-           let url = T.concat [render $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
+           let url = T.concat [render $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
                               , "#", anchor
                               ]
            notice (articleAuthor article) $
@@ -141,18 +140,18 @@ postCommentR date title = do
            redirect url
         Left _ -> do
            setMessageI $ MsgAlreadyExists $ articleTitle article
-           redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
+           redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
     _ -> do
       setMessageI MsgInvalidInput
-      redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleTitle article)
+      redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
 
 putCommentR :: Day -> Text -> Handler ()
 putCommentR = undefined
 
 deleteCommentR :: Day -> Text -> Handler ()
-deleteCommentR day title = do
+deleteCommentR day ident = do
   Entity uid _ <- requireAuth
-  Entity aid art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) title
+  Entity aid art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) ident
   ((result, _), _) <- runFormPost $ commentDeleteForm aid
   when (uid /= articleAuthor art) $ do
     permissionDenied "You are not allowed to delete those comment(s)."
@@ -160,10 +159,10 @@ deleteCommentR day title = do
     FormSuccess cs -> do
       when (any ((/= aid) . commentArticle) cs) $ permissionDenied "You can't delete that comment."
       runDB $ mapM_ (\c -> deleteBy $ UniqueComment aid (commentAuthor c) (commentCreatedAt c)) cs
-      redirect $ ArticleR day title
+      redirect $ ArticleR day (articleIdent art)
     _ -> do
       setMessageI MsgInvalidInput
-      redirect $ ModifyR day title
+      redirect $ ModifyR day (articleIdent art)
 
 postPreviewR :: Handler RepHtml
 postPreviewR = do
@@ -178,6 +177,7 @@ postPreviewR = do
           posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
           date     = toEnum $ articleCreatedDate article :: Day
           route    = Nothing :: Maybe Text
+          ident    = articleIdent article
       blogTitle <- getBlogTitle
       body <- markupRender article
       defaultLayout $ do
@@ -194,8 +194,8 @@ getTagR tag = do
     $(widgetFile "tag")
 
 postTrackbackR :: Day -> Text -> Handler RepXml
-postTrackbackR date title = do
-  Entity aid _ <- runDB $ getBy404 $ UniqueArticle (fromEnum date) title
+postTrackbackR date ident = do
+  Entity aid _ <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
   trackback <- runInputPost $
     Trackback aid <$> iopt textField "title"
                   <*> (liftM unTextarea <$> iopt textareaField "excerpt")
@@ -211,9 +211,9 @@ postTrackbackR date title = do
                |]
 
 getTrackbackR :: Day -> Text -> Handler RepXml
-getTrackbackR date title = do
+getTrackbackR date ident = do
   (art, ts) <- runDB $ do
-    Entity aid art <- getBy404 $ UniqueArticle (fromEnum date) title
+    Entity aid art <- getBy404 $ UniqueArticle (fromEnum date) ident
     ts <- map entityVal <$> selectList [TrackbackArticle ==. aid] []
     return (art, ts)
   render <- getUrlRender
@@ -225,11 +225,11 @@ getTrackbackR date title = do
       <rss version="0.91">
         <channel>
           <title>
-            #{title} - #{bTitle}
+            #{articleTitle art} - #{bTitle}
           <link>
-            #{render $ ArticleR date title}
+            #{render $ ArticleR date ident}
           <description>
-            #{title} - #{bTitle}
+            #{articleTitle art} - #{bTitle}
           <language>
             ja
           $forall t <- ts

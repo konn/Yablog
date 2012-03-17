@@ -13,6 +13,14 @@ import Data.Maybe
 import Prelude
 import Data.Char
 
+renderTwitterLink :: Pandoc -> Pandoc
+renderTwitterLink = bottomUp go
+  where
+    go (Link is (url, title))
+         | ("twitter":xs) <- T.split (==':') $ T.pack url
+         = Link is (T.unpack $ T.append "http://twitter.com/#!/" $ T.intercalate ":" xs, title)
+    go i = i
+
 addAmazonAssociateLink :: String -> Pandoc -> Pandoc
 addAmazonAssociateLink = bottomUp . procAmazon
 
@@ -22,7 +30,7 @@ renderMarkup :: String             -- ^ markup language
              -> Html               -- ^ Html
 renderMarkup lang trans =
     writeHtml opts
-                  . trans
+                  . trans . renderTwitterLink
                   . fromMaybe readMarkdown (lookup (map toLower lang) readers) defaultParserState
   where
     opts = defaultWriterOptions
