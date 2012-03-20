@@ -5,6 +5,7 @@ import Yesod.Feed
 import Control.Arrow
 import Data.Time
 import Data.Maybe
+import Data.List (last)
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -15,11 +16,23 @@ import Data.Maybe
 -- inclined, or create a single monolithic file.
 getRootR :: Handler RepHtml
 getRootR = do
-  articles <- runDB $ do
-    as <- selectList [] [LimitTo 5, Desc ArticleCreatedDate, Desc ArticleCreatedTime]
+  offset <- fromMaybe 0 <$> runInputGet (iopt intField "of")
+  (articles, hasMore) <- runDB $ do
+    as <- selectList [] [OffsetBy offset, LimitTo 5, Desc ArticleCreatedDate, Desc ArticleCreatedTime]
+    hasMore <-
+      if null as
+        then return False
+        else do
+          let anc = entityVal $ last as
+          olds <- count [ ArticleCreatedDate <=. articleCreatedDate anc
+                        , FilterOr [ ArticleCreatedDate <.  articleCreatedDate anc
+                                   , ArticleCreatedTime <.   articleCreatedTime anc
+                                   ]
+                        ]
+          return (olds > 0)
     cs <- mapM (\(Entity key _) -> count [CommentArticle ==. key]) as
     ts <- mapM (\(Entity key _) -> count [TrackbackArticle ==. key]) as
-    return $ zip3 (map entityVal as) cs ts
+    return $ (zip3 (map entityVal as) cs ts, hasMore)
   title <- getBlogTitle
   defaultLayout $ do
     setTitle $ toHtml $ "Home - " `T.append` title

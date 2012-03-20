@@ -1,4 +1,13 @@
 <h2>Recent Articles
+<ul class="pager">
+  $if offset > 0
+    <li .next>
+      <a href="@{RootR}?of=#{max 0 (offset - 5)}">
+         Newer Articles &rarr;
+  $if hasMore
+    <li .previous>
+      <a href="@{RootR}?of=#{offset + 5}">
+        &larr; Older Articles
 $forall (art, cs, ts) <- articles
   <div .well>
     ^{articleView art}
@@ -17,3 +26,12 @@ $forall (art, cs, ts) <- articles
           _{MsgNoTrackbacks}
         $else
           _{MsgTrackbacks} (#{ts})
+<ul class="pager">
+  $if offset > 0
+    <li .next>
+      <a href="@{RootR}?of=#{max 0 (offset - 5)}">
+         Newer Articles &rarr;
+  $if hasMore
+    <li .previous>
+      <a href="@{RootR}?of=#{offset + 5}">
+        &larr; Older Articles
