@@ -1,5 +1,5 @@
 <h2>Recent Articles
-<ul class="pager">
+<ul .pager>
   $if offset > 0
     <li .next>
       <a href="@{RootR}?of=#{max 0 (offset - 5)}">
@@ -12,16 +12,16 @@ $forall (art, cs, ts) <- articles
   <div .well>
     ^{articleView art}
     <div .navi-links>
-      <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}>
+      <a href=@{articleLink art}>
         Permalink
       \ | #
-      <a href="@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}#comments">
+      <a href="@{articleLink art}#comments">
         $if cs == 0
           _{MsgNoComments}
         $else
           _{MsgComments} (#{cs})
       \ | #
-      <a href="@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}#trackbacks">
+      <a href="@{articleLink art}#trackbacks">
         $if ts == 0
           _{MsgNoTrackbacks}
         $else

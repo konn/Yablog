@@ -9,6 +9,7 @@ module Import
     , module Forms
     , Text
     , articleView
+    , articleLink
 #if __GLASGOW_HASKELL__ < 740
     , (<>)
 #endif
@@ -44,6 +45,10 @@ articleView article = do
       posted = show $ UTCTime date (toEnum $ articleCreatedTime article)
       ident = articleIdent article
   $(widgetFile "article-view")
+
+articleLink :: Article -> Route Yablog
+articleLink article = ArticleR (toEnum $ articleCreatedDate article)
+                               (articleIdent article)
 
 #if __GLASGOW_HASKELL__ < 740
 infixr 5 <>

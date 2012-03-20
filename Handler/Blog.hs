@@ -44,16 +44,40 @@ getCreateR = do
 getArticleR :: Day -> Text -> Handler RepHtml
 getArticleR date ident = do
   musr <- maybeAuthId
-  (article, comments, trackbacks) <- runDB $ do
+  (article, comments, trackbacks, mprev, mnext) <- runDB $ do
     Entity key article <- getBy404 (UniqueArticle (fromEnum date) ident)
     cs <- map entityVal <$> selectList [CommentArticle ==. key] []
     ts <- map entityVal <$> selectList [TrackbackArticle ==. key] []
-    return (article, cs, ts)
+    mnext <- selectFirst [ ArticleCreatedDate >=. articleCreatedDate article
+                         , FilterOr [ ArticleCreatedDate >. articleCreatedDate article
+                                    , ArticleCreatedTime >. articleCreatedTime article
+                                    ]
+                         ]
+                         [ Asc ArticleCreatedDate, Asc ArticleCreatedTime]
+    mprev <- selectFirst [ ArticleCreatedDate <=. articleCreatedDate article
+                         , FilterOr [ ArticleCreatedDate <. articleCreatedDate article
+                                    , ArticleCreatedTime <. articleCreatedTime article
+                                    ]
+                         ]
+                         [ Desc ArticleCreatedDate, Desc ArticleCreatedTime ]
+    return (article, cs, ts, entityVal <$> mprev, entityVal <$> mnext)
   ((_, cWidget), cEnctype) <- generateFormPost $ commentForm Nothing article
   let mCommentForm = Just (cWidget, cEnctype)
   blogTitle <- getBlogTitle
   render <- getUrlRender
   defaultLayout $ do
+    when (isJust mprev) $ do
+      let prev = fromJust mprev
+      addHamletHead
+        [hamlet|
+          <link rel="prev previous" href=@{articleLink prev} title=#{articleTitle prev}>
+        |]
+    when (isJust mnext) $ do
+      let next = fromJust mnext
+      addHamletHead
+        [hamlet|
+          <link rel="next" href=@{articleLink next} title=#{articleTitle next}>
+        |]
     setTitle $ toHtml $ T.concat [articleTitle article, " - ", blogTitle]
     $(widgetFile "article")
 
@@ -178,6 +202,8 @@ postPreviewR = do
           date     = toEnum $ articleCreatedDate article :: Day
           route    = Nothing :: Maybe Text
           ident    = articleIdent article
+          mnext    = Nothing
+          mprev    = Nothing
       blogTitle <- getBlogTitle
       body <- markupRender article
       defaultLayout $ do

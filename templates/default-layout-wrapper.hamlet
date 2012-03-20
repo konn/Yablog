@@ -13,6 +13,7 @@
 
         <meta name="viewport" content="width=device-width,initial-scale=1">
         <link href="@{FeedR}" type="application/atom+xml" rel="alternate" title="Blog Feed">
+        <link rel="contents toc index home start top origin" href=@{RootR}>
         ^{pageHead pc}
 
         \<!--[if lt IE 9]>

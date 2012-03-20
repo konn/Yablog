@@ -1,4 +1,15 @@
+<ul .pager>
+  $maybe prev <- mprev
+    <li .previous>
+      <a href=@{articleLink prev}>
+        &larr; #{articleTitle prev}
+  $maybe next <- mnext
+    <li .next>
+      <a href=@{articleLink next}>
+        #{articleTitle next} &rarr;
+
 ^{articleView article}
+
 $if (not $ null trackbacks)
   <h2>
     <a name="trackbacks">
@@ -18,7 +29,6 @@ $else
   <div>
     Trackback URL:
     <input type="url" value="#{render $ TrackbackR date ident}">
-
 
 $if (not $ null comments)
     <h2>
@@ -46,3 +56,13 @@ $maybe (widget, enc) <- mCommentForm
     <form method=post action=@{CommentR date ident} enctype=#{enc}>
       ^{widget}
       <input type=submit>
+
+<ul .pager>
+  $maybe prev <- mprev
+    <li .previous>
+      <a href=@{articleLink prev}>
+        &larr; #{articleTitle prev}
+  $maybe next <- mnext
+    <li .next>
+      <a href=@{articleLink next}>
+        #{articleTitle next} &rarr;
