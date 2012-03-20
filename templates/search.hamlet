@@ -1,0 +1,9 @@
+<form action="http://www.google.com/cse" id="cse-search-box">
+  <div>
+    <input type="hidden" name="cx" value="#{cse}">
+    <input type="hidden" name="ie" value="UTF-8">
+    <div .input-append>
+      <input type="text" name="q" .span2>
+      <button type="submit" name="sa" .btn>
+        _{MsgSearch}
+<script type="text/javascript" src="http://www.google.com/cse/brand?form=cse-search-box&amp">

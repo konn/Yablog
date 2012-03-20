@@ -29,3 +29,4 @@ NoTrackbacks: No Trackbacks
 Identifier: Identifier
 NewComment: You have new comment
 YouHaveNewCommentFor url@T.Text: You have new comment for: #{url}
+Search: Search

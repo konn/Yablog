@@ -30,6 +30,12 @@ $maybe msg <- mmsg
           <li>
             <a href="@{ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)}##{commentAnchor comment}">
               #{show $ utctDay $ commentCreatedAt comment} #{commentAuthor comment}
+        $maybe cse <- mcse
+          <li .nav-header>
+            <i .icon-search> #
+            Search
+          <li>
+            ^{cse}
         <li .nav-header>
           Control
         $if accessible

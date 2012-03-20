@@ -68,6 +68,7 @@ data Extra = Extra
     , extraDescription :: Text
     , extraMarkup      :: Maybe String
     , extraMailAddress :: Maybe Text
+    , extraGoogleCSE   :: Maybe Text
     } deriving Show
 
 parseExtra :: DefaultEnv -> Object -> Parser Extra
@@ -80,3 +81,4 @@ parseExtra _ o = Extra
     <*> o .:  "description"
     <*> o .:? "markup"
     <*> o .:? "admin-mail"
+    <*> o .:? "google-cse"

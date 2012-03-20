@@ -128,6 +128,9 @@ instance Yesod Yablog where
         mmsg <- getMessage
         blogTitle <- getBlogTitle
         description <- getBlogDescription
+        let mcse = case extraGoogleCSE (appExtra $ settings master) of
+                     Just cse -> Just $(widgetFile "search")
+                     Nothing  -> Nothing
         comments <- runDB $ do
           cs <- map entityVal <$> selectList [] [LimitTo 10, Desc CommentCreatedAt]
           as <- mapM (get404 . commentArticle) cs
