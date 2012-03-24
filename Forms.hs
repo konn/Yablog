@@ -85,10 +85,10 @@ articleForm' mart mtags htm = do
                               <*> (T.unpack . T.filter (/='\r') . unTextarea <$>
                                     areq textareaField bodySettings
                                              (Textarea . T.pack . articleBody <$> mart))
-                              <*> (fromEnum <$> areq dayField cDateSettings
-                                                ((toEnum . articleCreatedDate <$> mart) <|> Just day))
-                              <*> (fromEnum . timeOfDayToTime <$> areq timeField cTimeSettings
-                                                ((timeToTimeOfDay . toEnum . articleCreatedTime <$> mart) <|> Just time))
+                              <*> (fromEnum . fromMaybe day <$> aopt dayField cDateSettings
+                                                (Just $ toEnum . articleCreatedDate <$> mart))
+                              <*> (fromEnum . timeOfDayToTime . fromMaybe time <$> aopt timeField cTimeSettings
+                                                (Just $ timeToTimeOfDay . toEnum . articleCreatedTime <$> mart))
                               <*> pure (articleModifiedAt =<< mart)
                 tags = T.words . fromMaybe "" <$> aopt textField tagsSettings (Just . T.unwords <$> mtags)
             in (,) <$> art <*> tags

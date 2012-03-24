@@ -18,7 +18,6 @@ import Control.Monad
 getRootR :: Handler RepHtml
 getRootR = do
   offset <- fromMaybe 0 <$> runInputGet (iopt intField "of")
-  liftIO . print . reqGetParams =<< getRequest
   (articles, hasMore) <- runDB $ do
     as <- selectList [] [OffsetBy offset, LimitTo 5, Desc ArticleCreatedDate, Desc ArticleCreatedTime]
     hasMore <-
