@@ -6,6 +6,7 @@ import Control.Arrow
 import Data.Time
 import Data.Maybe
 import Data.List (last)
+import Control.Monad
 
 -- This is a handler function for the GET request method on the RootR
 -- resource pattern. All of your resource patterns are defined in
@@ -17,6 +18,7 @@ import Data.List (last)
 getRootR :: Handler RepHtml
 getRootR = do
   offset <- fromMaybe 0 <$> runInputGet (iopt intField "of")
+  liftIO . print . reqGetParams =<< getRequest
   (articles, hasMore) <- runDB $ do
     as <- selectList [] [OffsetBy offset, LimitTo 5, Desc ArticleCreatedDate, Desc ArticleCreatedTime]
     hasMore <-
