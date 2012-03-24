@@ -10,6 +10,7 @@ module Import
     , Text
     , articleView
     , articleLink
+    , makeSnippet
 #if __GLASGOW_HASKELL__ < 740
     , (<>)
 #endif
@@ -21,6 +22,7 @@ import Foundation
 import Data.Monoid (Monoid (mappend, mempty, mconcat))
 import Control.Applicative ((<$>), (<*>), pure)
 import Data.Text (Text)
+import qualified Data.Text as T
 import Settings.StaticFiles
 import Text.Pandoc hiding (Null)
 import Yesod.Auth
@@ -49,6 +51,10 @@ articleView article = do
 articleLink :: Article -> Route Yablog
 articleLink article = ArticleR (toEnum $ articleCreatedDate article)
                                (articleIdent article)
+
+makeSnippet :: Int -> Text -> Text
+makeSnippet len t | T.length t <= len = t
+                  | otherwise         = T.take len t `T.append` "..."
 
 #if __GLASGOW_HASKELL__ < 740
 infixr 5 <>

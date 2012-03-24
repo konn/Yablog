@@ -2,11 +2,11 @@
   $maybe prev <- mprev
     <li .previous>
       <a href=@{articleLink prev}>
-        &larr; #{articleTitle prev}
+        &larr; #{makeSnippet 15 $ articleTitle prev}
   $maybe next <- mnext
     <li .next>
       <a href=@{articleLink next}>
-        #{articleTitle next} &rarr;
+        #{makeSnippet 15 $ articleTitle next} &rarr;
 
 ^{articleView article}
 
@@ -61,8 +61,8 @@ $maybe (widget, enc) <- mCommentForm
   $maybe prev <- mprev
     <li .previous>
       <a href=@{articleLink prev}>
-        &larr; #{articleTitle prev}
+        &larr; #{makeSnippet 15 $ articleTitle prev}
   $maybe next <- mnext
     <li .next>
       <a href=@{articleLink next}>
-        #{articleTitle next} &rarr;
+        #{makeSnippet 15 $ articleTitle next} &rarr;
