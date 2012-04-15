@@ -17,7 +17,7 @@ module Import
     ) where
 
 import Prelude hiding (writeFile, readFile, head, tail, init, last)
-import Yesod   hiding (Route(..))
+import Yesod   hiding (Route(..), Header(..))
 import Foundation
 import Data.Monoid (Monoid (mappend, mempty, mconcat))
 import Control.Applicative ((<$>), (<*>), pure)

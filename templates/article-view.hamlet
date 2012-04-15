@@ -37,4 +37,4 @@
     #{body}
     $if editable
       <div style="text-align: right;">
-        <a href=@{ModifyR date ident} .btn>_{MsgEditArticle} #
+        <a href=@{ModifyR (YablogDay date) ident} .btn>_{MsgEditArticle} #

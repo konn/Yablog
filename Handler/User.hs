@@ -24,7 +24,7 @@ userForm html = do
 getUserSettingsR :: Handler RepHtml
 getUserSettingsR = do
   Entity key usr <- requireAuth
-  ((_, widget), enctype) <- generateFormPost userForm
+  (widget, enctype) <- generateFormPost userForm
   defaultLayout $ do
     setTitle "Settings"
     $(widgetFile "user-settings")

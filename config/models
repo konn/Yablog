@@ -8,6 +8,7 @@ User
     amazon Text Maybe
     UniqueUser ident
     UserName screenName
+  deriving Show Eq
 
 Article
   author     UserId  Eq
@@ -19,6 +20,7 @@ Article
   createdTime Int Gt Lt Eq Desc
   modifiedAt  UTCTime Maybe Gt Lt Eq Desc
   UniqueArticle createdDate ident
+  deriving Show Eq
 
 Comment
   author    Text Eq
@@ -27,10 +29,12 @@ Comment
   createdAt UTCTime Asc
   article   ArticleId
   UniqueComment article author createdAt
+  deriving Show Eq
 
 Tag
   article ArticleId Eq
   name    Text Eq
+  deriving Show Eq
 
 Trackback
   article ArticleId Eq
@@ -38,5 +42,6 @@ Trackback
   excerpt Text Maybe
   url Text Eq
   blogName Text Maybe
+  deriving Show Eq
 
  -- By default this file is used in Model.hs (which is imported by Foundation.hs)

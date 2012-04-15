@@ -7,6 +7,7 @@ module Foundation
     , Widget
     , Form
     , YablogDate (..)
+    , YablogDay  (..)
     , maybeAuth
     , requireAuth
     , module Settings
@@ -117,7 +118,9 @@ instance Yesod Yablog where
     approot = ApprootMaster $ appRoot . settings
 
     -- Place the session key file in the config folder
-    encryptKey _ = fmap Just $ getKey "config/client_session_key.aes"
+    makeSessionBackend _ = do
+        key <- getKey "config/client_session_key.aes"
+        return . Just $ clientSessionBackend key 120
 
     defaultLayout widget = do
         musr <- maybeAuth
@@ -223,8 +226,11 @@ instance Show YablogDate where
 instance Read YablogDate where
   readsPrec _ = readsTime defaultTimeLocale "%Y-%m-%d"
 
-instance PathPiece Day where
-  toPathPiece = T.pack . formatTime defaultTimeLocale "%Y%m%d"
+newtype YablogDay = YablogDay { unYablogDay :: Day }
+    deriving (Show, Eq, Ord, ParseTime, Read, Enum)
+
+instance PathPiece YablogDay where
+  toPathPiece = T.pack . formatTime defaultTimeLocale "%Y%m%d" . unYablogDay
   fromPathPiece = Data.Time.parseTime defaultTimeLocale "%Y%m%d" . T.unpack
 
 notice :: UserId -> T.Text -> T.Text -> Handler ()

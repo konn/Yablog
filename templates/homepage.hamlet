@@ -1,12 +1,12 @@
 <h2>Recent Articles
 <ul .pager>
-  $if offset > 0
+  $if (>) offset 0
     <li .next>
-      <a href="@{RootR}?of=#{max 0 (offset - 5)}">
+      <a href="@{RootR}?of=#{max 0 $ subtract offset 5}">
          Newer Articles &rarr;
   $if hasMore
     <li .previous>
-      <a href="@{RootR}?of=#{offset + 5}">
+      <a href="@{RootR}?of=#{(+) offset 5}">
         &larr; Older Articles
 $forall (art, cs, ts) <- articles
   <div .well>
@@ -16,22 +16,22 @@ $forall (art, cs, ts) <- articles
         Permalink
       \ | #
       <a href="@{articleLink art}#comments">
-        $if cs == 0
+        $if (==) cs 0
           _{MsgNoComments}
         $else
           _{MsgComments} (#{cs})
       \ | #
       <a href="@{articleLink art}#trackbacks">
-        $if ts == 0
+        $if (==) ts 0
           _{MsgNoTrackbacks}
         $else
           _{MsgTrackbacks} (#{ts})
 <ul class="pager">
-  $if offset > 0
+  $if (>) offset 0
     <li .next>
-      <a href="@{RootR}?of=#{max 0 (offset - 5)}">
+      <a href="@{RootR}?of=#{max 0 (subtract offset 5)}">
          Newer Articles &rarr;
   $if hasMore
     <li .previous>
-      <a href="@{RootR}?of=#{offset + 5}">
+      <a href="@{RootR}?of=#{(+) offset 5}">
         &larr; Older Articles

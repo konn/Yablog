@@ -16,7 +16,7 @@ $if (not $ null trackbacks)
     _{MsgTrackbacks}
   <div>
     Trackback URL:
-    <input type="url" value="#{render $ TrackbackR date ident}">
+    <input type="url" value="#{render $ TrackbackR (YablogDay date) ident}">
   <ul .trackbacks>
     $forall t <- trackbacks
       <li .trackback>
@@ -28,7 +28,7 @@ $else
     _{MsgNoTrackbacks}
   <div>
     Trackback URL:
-    <input type="url" value="#{render $ TrackbackR date ident}">
+    <input type="url" value="#{render $ TrackbackR (YablogDay date) ident}">
 
 $if (not $ null comments)
     <h2>
@@ -53,7 +53,7 @@ $else
 
 $maybe (widget, enc) <- mCommentForm
     <h2>_{MsgLeaveComment}
-    <form method=post action=@{CommentR date ident} enctype=#{enc}>
+    <form method=post action=@{CommentR (YablogDay date) ident} enctype=#{enc}>
       ^{widget}
       <input type=submit>
 

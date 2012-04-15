@@ -8,12 +8,12 @@
 
 /preview PreviewR POST
 /article/create CreateR GET POST
-/article/#Day/#T.Text/edit ModifyR GET POST
-/article/#Day/#T.Text ArticleR GET PUT DELETE
-/article/#Day/#T.Text/delete DeleteR GET
-/article/#Day/#T.Text/comment CommentR POST PUT DELETE
+/article/#YablogDay/#T.Text/edit ModifyR GET POST
+/article/#YablogDay/#T.Text ArticleR GET PUT DELETE
+/article/#YablogDay/#T.Text/delete DeleteR GET
+/article/#YablogDay/#T.Text/comment CommentR POST PUT DELETE
 /tag/#T.Text TagR GET
-/article/#Day/#T.Text/comment/delete DeleteCommentR POST
-/article/#Day/#T.Text/trackback TrackbackR GET POST
+/article/#YablogDay/#T.Text/comment/delete DeleteCommentR POST
+/article/#YablogDay/#T.Text/trackback TrackbackR GET POST
 
 /user/settings UserSettingsR GET PUT POST

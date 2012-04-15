@@ -35,46 +35,46 @@ articleForm' mart mtags htm = do
   if maybe False ((/= usrId) . articleAuthor) mart
      then lift $ permissionDenied "You cannot edit that article."
      else flip renderBootstrap htm $
-            let titleSettings = FieldSettings { fsLabel = MsgTitle
+            let titleSettings = FieldSettings { fsLabel = SomeMessage MsgTitle
                                               , fsName = Just "title"
                                               , fsId = Just "title"
-                                              , fsClass = ["span8"]
+                                              , fsAttrs = [("class", "span8")]
                                               , fsTooltip = Nothing
                                               }
-                bodySettings  = FieldSettings { fsLabel = MsgArticle
+                bodySettings  = FieldSettings { fsLabel = SomeMessage MsgArticle
                                               , fsId = Just "src"
                                               , fsName = Just "src"
-                                              , fsClass = ["span8"]
+                                              , fsAttrs = [("class", "span8")]
                                               , fsTooltip = Nothing
                                               }
-                tagsSettings  = FieldSettings { fsLabel = MsgTags
+                tagsSettings  = FieldSettings { fsLabel = SomeMessage MsgTags
                                               , fsId = Just "tags"
                                               , fsName = Just "tags"
-                                              , fsClass = ["span8"]
+                                              , fsAttrs = [("class", "span8")]
                                               , fsTooltip = Nothing
                                               }
-                identSettings = FieldSettings { fsLabel = MsgIdentifier
+                identSettings = FieldSettings { fsLabel = SomeMessage MsgIdentifier
                                               , fsId = Just "ident"
                                               , fsName = Just "ident"
-                                              , fsClass = ["span8"]
+                                              , fsAttrs = [("class", "span8")]
                                               , fsTooltip = Nothing
                                               }
-                cDateSettings = FieldSettings { fsLabel = MsgCreatedDate
+                cDateSettings = FieldSettings { fsLabel = SomeMessage MsgCreatedDate
                                               , fsId = Just "created_date"
                                               , fsName = Just "created_date"
-                                              , fsClass = []
+                                              , fsAttrs = []
                                               , fsTooltip = Nothing
                                               }
-                cTimeSettings = FieldSettings { fsLabel   = MsgCreatedTime
+                cTimeSettings = FieldSettings { fsLabel   = SomeMessage MsgCreatedTime
                                               , fsName    = Just "created_time"
                                               , fsId      = Just "created_time"
-                                              , fsClass   = []
+                                              , fsAttrs   = []
                                               , fsTooltip = Nothing
                                               }
-                markupSettings = FieldSettings { fsLabel = "Markup" :: Text
+                markupSettings = FieldSettings { fsLabel = "Markup"
                                                , fsName  = Just "markup"
                                                , fsId    = Just "markup"
-                                               , fsClass = []
+                                               , fsAttrs = []
                                                , fsTooltip = Nothing
                                                }
                 art = Article <$> pure usrId
@@ -95,8 +95,8 @@ articleForm' mart mtags htm = do
 
 commentDeleteForm :: ArticleId -> Form [Comment]
 commentDeleteForm art html = do
-  let commentSettings = FieldSettings { fsLabel = MsgComments
-                                      , fsClass = ["span8"]
+  let commentSettings = FieldSettings { fsLabel = SomeMessage MsgComments
+                                      , fsAttrs = [("class", "span8")]
                                       , fsName  = Just "delete-contents"
                                       , fsId    = Just "delete-contents"
                                       , fsTooltip = Nothing
@@ -114,14 +114,14 @@ commentForm' :: Maybe Comment -> ArticleId -> Form Comment
 commentForm' mcom art html = do
   musr <- lift  maybeAuth
   time <- liftIO getCurrentTime
-  let commentField = FieldSettings { fsLabel = MsgComment
-                                   , fsClass = ["span8"]
+  let commentField = FieldSettings { fsLabel = SomeMessage MsgComment
+                                   , fsAttrs = [("class", "span8")]
                                    , fsName  = Just "comment-contents"
                                    , fsId    = Just "comment-contents"
                                    , fsTooltip = Nothing
                                    }
-      nameField    = FieldSettings { fsLabel = MsgName
-                                   , fsClass = []
+      nameField    = FieldSettings { fsLabel = SomeMessage MsgName
+                                   , fsAttrs = []
                                    , fsId    = Just "comment-author"
                                    , fsName  = Just "comment-author"
                                    , fsTooltip = Nothing

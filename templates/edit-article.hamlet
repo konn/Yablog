@@ -13,16 +13,16 @@
           _{MsgDeleteComment}
   <div .tab-content>
     <div .active .tab-pane #editor>
-      <form method=post action=@{ModifyR day ident} enctype=#{enctype} #edit-form>
+      <form method=post action=@{ModifyR (YablogDay day) ident} enctype=#{enctype} #edit-form>
         ^{widget}
-        <a href=@{DeleteR day ident} .btn .btn-danger>
+        <a href=@{DeleteR (YablogDay day) ident} .btn .btn-danger>
           _{MsgDeleteArticle}
         <input type=submit .btn>
     <div .tab-pane #preview>
       <iframe src=@{PreviewR} #preview-contents .span7 height="400px">
     $maybe (commentWidget, commentEnctype) <- mCommentForm
       <div .tab-pane #comment-delete>
-        <form action=@{DeleteCommentR day ident} method=post enctype=#{commentEnctype}>
+        <form action=@{DeleteCommentR (YablogDay day) ident} method=post enctype=#{commentEnctype}>
           ^{commentWidget}
           <input type=submit value=_{MsgDeleteComment}>
 

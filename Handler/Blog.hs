@@ -37,12 +37,12 @@ postCreateR = do
 
 getCreateR :: Handler RepHtml
 getCreateR = do
-  ((_, widget), enctype) <- generateFormPost articleForm
+  (widget, enctype) <- generateFormPost articleForm
   defaultLayout $ do
     $(widgetFile "post-article")
 
-getArticleR :: Day -> Text -> Handler RepHtml
-getArticleR date ident = do
+getArticleR :: YablogDay -> Text -> Handler RepHtml
+getArticleR (YablogDay date) ident = do
   musr <- maybeAuthId
   (article, comments, trackbacks, mprev, mnext) <- runDB $ do
     Entity key article <- getBy404 (UniqueArticle (fromEnum date) ident)
@@ -61,7 +61,7 @@ getArticleR date ident = do
                          ]
                          [ Desc ArticleCreatedDate, Desc ArticleCreatedTime ]
     return (article, cs, ts, entityVal <$> mprev, entityVal <$> mnext)
-  ((_, cWidget), cEnctype) <- generateFormPost $ commentForm Nothing article
+  (cWidget, cEnctype) <- generateFormPost $ commentForm Nothing article
   let mCommentForm = Just (cWidget, cEnctype)
   blogTitle <- getBlogTitle
   render <- getUrlRender
@@ -81,8 +81,8 @@ getArticleR date ident = do
     setTitle $ toHtml $ T.concat [articleTitle article, " - ", blogTitle]
     $(widgetFile "article")
 
-putArticleR :: Day -> Text -> Handler RepHtml
-putArticleR day ident = do
+putArticleR :: YablogDay -> Text -> Handler RepHtml
+putArticleR (YablogDay day) ident = do
   ((result, widget), enctype) <- runFormPost articleForm
   usrId <- requireAuthId
   time  <- liftIO getCurrentTime
@@ -98,37 +98,37 @@ putArticleR day ident = do
             return True
           else return False
       if suc
-         then redirect $ ArticleR day $ articleIdent article
+         then redirect $ ArticleR (YablogDay day) $ articleIdent article
          else permissionDenied "You are not allowed to edit this article."
     _ -> do
       setMessageI MsgInvalidInput
       let mCommentForm = Nothing :: Maybe (Widget, Text)
       defaultLayout $(widgetFile "edit-article")
 
-getDeleteR :: Day -> Text -> Handler RepHtml
+getDeleteR :: YablogDay -> Text -> Handler RepHtml
 getDeleteR = deleteArticleR 
 
-getModifyR :: Day -> Text -> Handler RepHtml
-getModifyR day ident = do
+getModifyR :: YablogDay -> Text -> Handler RepHtml
+getModifyR (YablogDay day) ident = do
   (artId, art, tags) <- runDB $ do
     Entity key art <- getBy404 $ UniqueArticle (fromEnum day) ident
     tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
     return (key, art, tags)
-  ((_, widget), enctype) <- generateFormPost $ articleForm' (Just art) (Just tags)
-  ((_, cWidget), cEnctype) <- generateFormPost $ commentDeleteForm artId
+  (widget, enctype) <- generateFormPost $ articleForm' (Just art) (Just tags)
+  (cWidget, cEnctype) <- generateFormPost $ commentDeleteForm artId
   let mCommentForm = Just (cWidget, cEnctype)
   defaultLayout $ do
     setTitleI $ MsgEdit $ articleTitle art
     $(widgetFile "edit-article")
 
-postDeleteCommentR :: Day -> Text -> Handler ()
+postDeleteCommentR :: YablogDay -> Text -> Handler ()
 postDeleteCommentR = deleteCommentR
 
-postModifyR :: Day -> Text -> Handler RepHtml
+postModifyR :: YablogDay -> Text -> Handler RepHtml
 postModifyR = putArticleR
 
-deleteArticleR :: Day -> Text -> Handler RepHtml
-deleteArticleR day ident = do
+deleteArticleR :: YablogDay -> Text -> Handler RepHtml
+deleteArticleR (YablogDay day) ident = do
   usrId  <- requireAuthId
   Entity key art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) ident
   if articleAuthor art == usrId
@@ -140,8 +140,8 @@ deleteArticleR day ident = do
     else do
       permissionDenied "You are not allowed to delete that article."
 
-postCommentR :: Day -> Text -> Handler RepHtml
-postCommentR date ident = do
+postCommentR :: YablogDay -> Text -> Handler RepHtml
+postCommentR (YablogDay date) ident = do
   Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
   ((result, _), _) <- runFormPost $ commentForm' Nothing key
   case result of
@@ -169,11 +169,11 @@ postCommentR date ident = do
       setMessageI MsgInvalidInput
       redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
 
-putCommentR :: Day -> Text -> Handler ()
+putCommentR :: YablogDay -> Text -> Handler ()
 putCommentR = undefined
 
-deleteCommentR :: Day -> Text -> Handler ()
-deleteCommentR day ident = do
+deleteCommentR :: YablogDay -> Text -> Handler ()
+deleteCommentR (YablogDay day) ident = do
   Entity uid _ <- requireAuth
   Entity aid art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) ident
   ((result, _), _) <- runFormPost $ commentDeleteForm aid
@@ -183,10 +183,10 @@ deleteCommentR day ident = do
     FormSuccess cs -> do
       when (any ((/= aid) . commentArticle) cs) $ permissionDenied "You can't delete that comment."
       runDB $ mapM_ (\c -> deleteBy $ UniqueComment aid (commentAuthor c) (commentCreatedAt c)) cs
-      redirect $ ArticleR day (articleIdent art)
+      redirect $ ArticleR (YablogDay day) (articleIdent art)
     _ -> do
       setMessageI MsgInvalidInput
-      redirect $ ModifyR day (articleIdent art)
+      redirect $ ModifyR (YablogDay day) (articleIdent art)
 
 postPreviewR :: Handler RepHtml
 postPreviewR = do
@@ -219,8 +219,8 @@ getTagR tag = do
     setTitleI $ MsgArticlesForTag tag
     $(widgetFile "tag")
 
-postTrackbackR :: Day -> Text -> Handler RepXml
-postTrackbackR date ident = do
+postTrackbackR :: YablogDay -> Text -> Handler RepXml
+postTrackbackR (YablogDay date) ident = do
   Entity aid _ <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
   trackback <- runInputPost $
     Trackback aid <$> iopt textField "title"
@@ -236,8 +236,8 @@ postTrackbackR date ident = do
                  <message>Already exists.
                |]
 
-getTrackbackR :: Day -> Text -> Handler RepXml
-getTrackbackR date ident = do
+getTrackbackR :: YablogDay -> Text -> Handler RepXml
+getTrackbackR (YablogDay date) ident = do
   (art, ts) <- runDB $ do
     Entity aid art <- getBy404 $ UniqueArticle (fromEnum date) ident
     ts <- map entityVal <$> selectList [TrackbackArticle ==. aid] []
@@ -253,7 +253,7 @@ getTrackbackR date ident = do
           <title>
             #{articleTitle art} - #{bTitle}
           <link>
-            #{render $ ArticleR date ident}
+            #{render $ ArticleR (YablogDay date) ident}
           <description>
             #{articleTitle art} - #{bTitle}
           <language>
