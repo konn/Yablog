@@ -104,13 +104,13 @@ isAdmin usr = do
   as <- extraAdmins . appExtra . settings <$> getYesod
   return $ userIdent usr `elem` as
 
-markupRender :: Article -> GHandler sub Yablog Html
-markupRender article = do
+markupRender :: Maybe String -> Article -> GHandler sub Yablog Html
+markupRender mid article = do
   extra <- appExtra . settings <$> getYesod
   usr <- runDB $ get404 $ articleAuthor article
   let markup = fromMaybe "markdown" $ articleMarkup article <|> extraMarkup extra
       trans  = maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr
-  return $ renderMarkup markup trans $ articleBody article
+  return $ renderMarkup mid markup trans $ articleBody article
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.

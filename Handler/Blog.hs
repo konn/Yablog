@@ -205,7 +205,7 @@ postPreviewR = do
           mnext    = Nothing
           mprev    = Nothing
       blogTitle <- getBlogTitle
-      body <- markupRender article
+      body <- markupRender Nothing article
       defaultLayout $ do
         $(widgetFile "article-view")
     _ -> notFound

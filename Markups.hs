@@ -24,11 +24,12 @@ renderTwitterLink = bottomUp go
 addAmazonAssociateLink :: String -> Pandoc -> Pandoc
 addAmazonAssociateLink = bottomUp . procAmazon
 
-renderMarkup :: String             -- ^ markup language
+renderMarkup :: Maybe String
+             -> String             -- ^ markup language
              -> (Pandoc -> Pandoc) -- ^ pandoc transformer
              -> String             -- ^ source
              -> Html               -- ^ Html
-renderMarkup lang trans =
+renderMarkup mid lang trans =
     writeHtml opts
                   . trans . renderTwitterLink
                   . fromMaybe readMarkdown (lookup (map toLower lang) readers) defaultParserState
@@ -38,6 +39,7 @@ renderMarkup lang trans =
                MathJax "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
            , writerHighlight = True
            , writerHtml5 = True
+           , writerIdentifierPrefix = fromMaybe "" mid
            }
 
 

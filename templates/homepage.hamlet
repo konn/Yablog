@@ -8,9 +8,10 @@
     <li .previous>
       <a href="@{RootR}?of=#{(+) offset 5}">
         &larr; Older Articles
-$forall (art, cs, ts) <- articles
+$forall (no, ents) <- articles
+ $with (art, cs, ts) <-  ents
   <div .well>
-    ^{articleView art}
+    ^{articleView (Just $ (++) "art" $ (++) (show no) "-") art}
     <div .navi-links>
       <a href=@{articleLink art}>
         Permalink

@@ -32,7 +32,7 @@ getRootR = do
           return (olds > 0)
     cs <- mapM (\(Entity key _) -> count [CommentArticle ==. key]) as
     ts <- mapM (\(Entity key _) -> count [TrackbackArticle ==. key]) as
-    return $ (zip3 (map entityVal as) cs ts, hasMore)
+    return $ (zip [1 :: Int ..] $ zip3 (map entityVal as) cs ts, hasMore)
   title <- getBlogTitle
   defaultLayout $ do
     setTitle $ toHtml $ "Home - " `T.append` title
@@ -61,7 +61,7 @@ getFeedR = do
 
 toFeedEntry :: Article -> Handler (FeedEntry (Route Yablog))
 toFeedEntry art = do
-  body <- markupRender art
+  body <- markupRender Nothing art
   let time = UTCTime (toEnum $ articleCreatedDate art) (toEnum $ articleCreatedTime art)
   return FeedEntry { feedEntryLink    = ArticleR (toEnum $ articleCreatedDate art) (articleTitle art)
                    , feedEntryUpdated = fromMaybe time $ articleModifiedAt art

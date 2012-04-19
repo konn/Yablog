@@ -29,8 +29,8 @@ import Yesod.Auth
 import Data.Time
 import Forms
 
-articleView :: Article -> Widget
-articleView article = do
+articleView :: Maybe String -> Article -> Widget
+articleView mid article = do
   render <- lift getUrlRender
   let route = Just $ render $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
   musr <- lift maybeAuthId
@@ -39,7 +39,7 @@ articleView article = do
     author <- get404 (articleAuthor article)
     tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
     return (userScreenName author, tags)
-  body <- lift $ markupRender article
+  body <- lift $ markupRender mid article
   blogTitle <- lift getBlogTitle
   let title  = articleTitle article
       editable = maybe False (== articleAuthor article) musr

@@ -8,7 +8,7 @@
       <a href=@{articleLink next}>
         #{makeSnippet 15 $ articleTitle next} &rarr;
 
-^{articleView article}
+^{articleView Nothing article}
 
 $if (not $ null trackbacks)
   <h2>
