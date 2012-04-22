@@ -11,12 +11,13 @@
       <li>
         <a href="#comment-delete" data-toggle="tab" #show-comment-view>
           _{MsgDeleteComment}
+    <li>
+      <a href="#delete-article" data-toggle="tab" #show-delete-article>
+        _{MsgDeleteArticle}
   <div .tab-content>
     <div .active .tab-pane #editor>
       <form method=post action=@{ModifyR (YablogDay day) ident} enctype=#{enctype} #edit-form>
         ^{widget}
-        <a href=@{DeleteR (YablogDay day) ident} .btn .btn-danger>
-          _{MsgDeleteArticle}
         <input type=submit .btn>
     <div .tab-pane #preview>
       <iframe src=@{PreviewR} #preview-contents .span7 height="400px">
@@ -25,4 +26,6 @@
         <form action=@{DeleteCommentR (YablogDay day) ident} method=post enctype=#{commentEnctype}>
           ^{commentWidget}
           <input type=submit value=_{MsgDeleteComment}>
-
+    <div .tab-pane #delete-article>
+      <form action=@{DeleteR (YablogDay day) ident} method=post enctype=#{enctype}>
+        <input type=submit value=_{MsgDeleteArticle} .btn>
