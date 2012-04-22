@@ -18,7 +18,6 @@ postCreateR = do
   ((result, widget), enctype) <- runFormPost articleForm
   case result of
     FormSuccess (article, tags, tbs) -> do
-      mapM_ (pingTrackback article) tbs
       usr <- requireAuthId
       when (articleAuthor article /= usr) $ redirect RootR
       success <- runDB $ do
@@ -30,6 +29,7 @@ postCreateR = do
           Left  _ -> return False
       if success
          then do
+           mapM_ (pingTrackback article) tbs
            redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
          else do
            setMessageI $ MsgAlreadyExists $ articleTitle article
@@ -109,7 +109,6 @@ putArticleR (YablogDay day) ident = do
   time  <- liftIO getCurrentTime
   case result of
     FormSuccess (article, tags, tbs) -> do
-      mapM_ (pingTrackback article) tbs
       suc <- runDB $ do
         Entity key old <- getBy404 $ UniqueArticle (fromEnum day) ident
         if articleAuthor old == usrId
@@ -120,7 +119,9 @@ putArticleR (YablogDay day) ident = do
             return True
           else return False
       if suc
-         then redirect $ ArticleR (YablogDay day) $ articleIdent article
+         then do
+           mapM_ (pingTrackback article) tbs
+           redirect $ ArticleR (YablogDay day) $ articleIdent article
          else permissionDenied "You are not allowed to edit this article."
     _ -> do
       setMessageI MsgInvalidInput
