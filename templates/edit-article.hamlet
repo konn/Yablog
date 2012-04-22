@@ -10,7 +10,7 @@
     $maybe _ <- mCommentTrackbackForm
       <li>
         <a href="#comment-delete" data-toggle="tab" #show-comment-view>
-          _{MsgDeleteComment}
+          _{MsgDeleteCommentTrackback}
     <li>
       <a href="#delete-article" data-toggle="tab" #show-delete-article>
         _{MsgDeleteArticle}
@@ -28,7 +28,7 @@
           <input type=submit value=_{MsgDeleteComment}>
         <form action=@{DeleteTrackbackR (YablogDay day) ident} method=post enctype=#{tEnctype}>
           ^{tWidget}
-          <input type=submit value=_{MsgDeleteComment}>
+          <input type=submit value=_{MsgDeleteTrackback}>
     <div .tab-pane #delete-article>
       <form action=@{DeleteR (YablogDay day) ident} method=get enctype=#{enctype}>
         <input type=submit value=_{MsgDeleteArticle} .btn .btn-danger>
