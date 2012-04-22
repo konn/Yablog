@@ -95,7 +95,9 @@ pingTrackback article tb = do
              ,("blog_name", T.encodeUtf8 blogName)
              ]
       man = httpManager master
-  lift $ flip httpLbs man . urlEncodedBody meta =<< parseUrl tb
+  lift $ do
+    rsp <- flip httpLbs man . urlEncodedBody meta =<< parseUrl tb
+    liftIO $ print rsp
   liftIO $ print meta
   return ()
 

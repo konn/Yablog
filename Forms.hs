@@ -81,7 +81,7 @@ articleForm' mart mtags htm = do
                 trackbackUrls = FieldSettings { fsLabel = "Trackback(s)"
                                               , fsName  = Just "trackbacks"
                                               , fsId    = Just "trackbacks"
-                                              , fsAttrs = []
+                                              , fsAttrs = [("class", "span8")]
                                               , fsTooltip = Nothing
                                               }
                 art = Article <$> pure usrId
