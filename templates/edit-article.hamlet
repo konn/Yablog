@@ -7,7 +7,7 @@
     <li>
       <a href="#preview" data-toggle="tab" #show-preview>
         _{MsgPreview}
-    $maybe _ <- mCommentForm
+    $maybe _ <- mCommentTrackbackForm
       <li>
         <a href="#comment-delete" data-toggle="tab" #show-comment-view>
           _{MsgDeleteComment}
@@ -21,10 +21,13 @@
         <input type=submit .btn>
     <div .tab-pane #preview>
       <iframe src=@{PreviewR} #preview-contents .span7 height="400px">
-    $maybe (commentWidget, commentEnctype) <- mCommentForm
+    $maybe (cWidget, cEnctype, tWidget, tEnctype) <- mCommentTrackbackForm
       <div .tab-pane #comment-delete>
-        <form action=@{DeleteCommentR (YablogDay day) ident} method=post enctype=#{commentEnctype}>
-          ^{commentWidget}
+        <form action=@{DeleteCommentR (YablogDay day) ident} method=post enctype=#{cEnctype}>
+          ^{cWidget}
+          <input type=submit value=_{MsgDeleteComment}>
+        <form action=@{DeleteTrackbackR (YablogDay day) ident} method=post enctype=#{tEnctype}>
+          ^{tWidget}
           <input type=submit value=_{MsgDeleteComment}>
     <div .tab-pane #delete-article>
       <form action=@{DeleteR (YablogDay day) ident} method=get enctype=#{enctype}>

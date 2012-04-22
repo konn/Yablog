@@ -1,5 +1,6 @@
 module Forms ( articleForm, articleForm', commentDeleteForm
              , commentForm, commentForm', trackbackForm
+             , trackbackDeleteForm
              ) where
 import Yesod.Form
 import Prelude
@@ -11,7 +12,6 @@ import Data.Text (Text)
 import Data.Time
 import Control.Monad
 import Data.Maybe
-import Settings
 import Control.Arrow
 import Markups
 import Yesod.Default.Config
@@ -116,6 +116,21 @@ commentDeleteForm art html = do
     mkOptName c = T.concat [ commentBody c, " - ", commentAuthor c, " / "
                            , T.pack$ show $ commentCreatedAt c
                            ]
+
+trackbackDeleteForm :: ArticleId -> Form [Trackback]
+trackbackDeleteForm art html = do
+  let tbsSettings = FieldSettings { fsLabel = SomeMessage MsgComments
+                                  , fsAttrs = [("class", "span8")]
+                                  , fsName  = Just "delete-tbs"
+                                  , fsId    = Just "delete-tbs"
+                                  , fsTooltip = Nothing
+                                  }
+  cs <- lift $ runDB $ selectList [TrackbackArticle ==. art] []
+  flip renderBootstrap html $
+    areq (multiSelectFieldList [(mkOptName c, c) | Entity _ c <- cs]) tbsSettings Nothing
+  where
+    mkOptName t = fromMaybe (fromMaybe (trackbackUrl t) $ trackbackBlogName t) $
+                    trackbackTitle t
 
 
 commentForm' :: Maybe Comment -> ArticleId -> Form Comment

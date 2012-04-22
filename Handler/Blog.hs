@@ -142,7 +142,7 @@ putArticleR (YablogDay day) ident = do
          else permissionDenied "You are not allowed to edit this article."
     _ -> do
       setMessageI MsgInvalidInput
-      let mCommentForm = Nothing :: Maybe (Widget, Text)
+      let mCommentTrackbackForm = Nothing :: Maybe (Widget, Text, Widget, Text)
       defaultLayout $(widgetFile "edit-article")
 
 getDeleteR :: YablogDay -> Text -> Handler RepHtml
@@ -156,7 +156,8 @@ getModifyR (YablogDay day) ident = do
     return (key, art, tags)
   (widget, enctype) <- generateFormPost $ articleForm' (Just art) (Just tags)
   (cWidget, cEnctype) <- generateFormPost $ commentDeleteForm artId
-  let mCommentForm = Just (cWidget, cEnctype)
+  (tWidget, tEnctype) <- generateFormPost $ trackbackDeleteForm artId
+  let mCommentTrackbackForm = Just (cWidget, cEnctype, tWidget, tEnctype)
   defaultLayout $ do
     setTitleI $ MsgEdit $ articleTitle art
     $(widgetFile "edit-article")
@@ -212,6 +213,25 @@ postCommentR (YablogDay date) ident = do
 putCommentR :: YablogDay -> Text -> Handler ()
 putCommentR = undefined
 
+deleteTrackbackR :: YablogDay -> Text -> Handler ()
+deleteTrackbackR (YablogDay day) ident = do
+  Entity uid _ <- requireAuth
+  Entity aid art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) ident
+  ((result, _), _) <- runFormPost $ trackbackDeleteForm aid
+  when (uid /= articleAuthor art) $ do
+    permissionDenied "You are not allowed to delete those comment(s)."
+  case result of
+    FormSuccess cs -> do
+      when (any ((/= aid) . trackbackArticle) cs) $ permissionDenied "You can't delete that comment."
+      runDB $ mapM_ (\c -> deleteBy $ UniqueTrackback aid (trackbackUrl c)) cs
+      redirect $ ArticleR (YablogDay day) (articleIdent art)
+    _ -> do
+      setMessageI MsgInvalidInput
+      redirect $ ModifyR (YablogDay day) (articleIdent art)
+
+postDeleteTrackbackR :: YablogDay -> Text -> Handler ()
+postDeleteTrackbackR = deleteTrackbackR
+
 deleteCommentR :: YablogDay -> Text -> Handler ()
 deleteCommentR (YablogDay day) ident = do
   Entity uid _ <- requireAuth
@@ -236,7 +256,7 @@ postPreviewR = do
     FormSuccess (article, tags, tbs) -> do
       let editable = False
           comments = []
-          mCommentForm = Nothing :: Maybe (Widget, Text)
+          mCommentTrackbackForm = Nothing :: Maybe (Widget, Text, Widget, Text)
           title    = articleTitle article
           posted = show $ UTCTime (toEnum $ articleCreatedDate article) (toEnum $ articleCreatedTime article)
           date     = toEnum $ articleCreatedDate article :: Day
