@@ -27,5 +27,5 @@
           ^{commentWidget}
           <input type=submit value=_{MsgDeleteComment}>
     <div .tab-pane #delete-article>
-      <form action=@{DeleteR (YablogDay day) ident} method=post enctype=#{enctype}>
-        <input type=submit value=_{MsgDeleteArticle} .btn>
+      <form action=@{DeleteR (YablogDay day) ident} method=get enctype=#{enctype}>
+        <input type=submit value=_{MsgDeleteArticle} .btn .btn-danger>
