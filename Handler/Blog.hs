@@ -36,7 +36,7 @@ postCreateR = do
       if success
          then do
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
-           setMessageI $ T.unlines errs
+           unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
          else do
            setMessageI $ MsgAlreadyExists $ articleTitle article
@@ -138,7 +138,7 @@ putArticleR (YablogDay day) ident = do
       if suc
          then do
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
-           setMessageI $ T.unlines errs
+           unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (YablogDay day) $ articleIdent article
          else permissionDenied "You are not allowed to edit this article."
     _ -> do
