@@ -17,10 +17,11 @@ import Markups
 import Yesod.Default.Config
 import qualified Data.Text as T
 
-articleForm :: Form (Article, [Text])
+type URL = String
+articleForm :: Form (Article, [Text], [URL])
 articleForm = articleForm' Nothing Nothing
 
-articleForm' :: Maybe Article -> Maybe [Text] -> Form (Article, [Text])
+articleForm' :: Maybe Article -> Maybe [Text] -> Form (Article, [Text], [URL])
 articleForm' mart mtags htm = do
   Entity usrId usr <- lift requireAuth
   lift $ do
@@ -77,6 +78,12 @@ articleForm' mart mtags htm = do
                                                , fsAttrs = []
                                                , fsTooltip = Nothing
                                                }
+                trackbackUrls = FieldSettings { fsLabel = "Trackback(s)"
+                                              , fsName  = Just "trackbacks"
+                                              , fsId    = Just "trackbacks"
+                                              , fsAttrs = []
+                                              , fsTooltip = Nothing
+                                              }
                 art = Article <$> pure usrId
                               <*> areq textField titleSettings (articleTitle <$> mart)
                               <*> areq textField identSettings (Just ident)
@@ -91,7 +98,8 @@ articleForm' mart mtags htm = do
                                                 (Just $ timeToTimeOfDay . toEnum . articleCreatedTime <$> mart))
                               <*> pure (articleModifiedAt =<< mart)
                 tags = T.words . fromMaybe "" <$> aopt textField tagsSettings (Just . T.unwords <$> mtags)
-            in (,) <$> art <*> tags
+                tbs  = maybe [] (lines . T.unpack . unTextarea) <$> aopt textareaField trackbackUrls Nothing
+            in (,,) <$> art <*> tags <*> tbs
 
 commentDeleteForm :: ArticleId -> Form [Comment]
 commentDeleteForm art html = do

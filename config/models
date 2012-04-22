@@ -42,6 +42,7 @@ Trackback
   excerpt Text Maybe
   url Text Eq
   blogName Text Maybe
+  UniqueTrackback article url
   deriving Show Eq
 
  -- By default this file is used in Model.hs (which is imported by Foundation.hs)

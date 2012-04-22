@@ -4,18 +4,21 @@ import Import
 import Control.Monad
 import Yesod.Auth
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import Data.List (sortBy)
 import Data.Function
 import Text.Hamlet.XML
 import Text.XML
 import Blaze.ByteString.Builder
 import Data.Maybe
+import Network.HTTP.Conduit
 
 postCreateR :: Handler RepHtml
 postCreateR = do
   ((result, widget), enctype) <- runFormPost articleForm
   case result of
-    FormSuccess (article, tags) -> do
+    FormSuccess (article, tags, tbs) -> do
+      mapM_ (pingTrackback article) tbs
       usr <- requireAuthId
       when (articleAuthor article /= usr) $ redirect RootR
       success <- runDB $ do
@@ -81,13 +84,30 @@ getArticleR (YablogDay date) ident = do
     setTitle $ toHtml $ T.concat [articleTitle article, " - ", blogTitle]
     $(widgetFile "article")
 
+pingTrackback :: Article -> String -> Handler ()
+pingTrackback article tb = do
+  renderUrl <- getUrlRender
+  master <- getYesod
+  blogName <- getBlogTitle
+  let meta = [("title", T.encodeUtf8 $ articleTitle article)
+             ,("excerpt", T.encodeUtf8 $ T.take 255 $ T.pack $ articleBody article)
+             ,("url", T.encodeUtf8 $ renderUrl $ articleLink article)
+             ,("blog_name", T.encodeUtf8 blogName)
+             ]
+      man = httpManager master
+  lift $ flip httpLbs man . urlEncodedBody meta =<< parseUrl tb
+  liftIO $ print meta
+  return ()
+
+
 putArticleR :: YablogDay -> Text -> Handler RepHtml
 putArticleR (YablogDay day) ident = do
   ((result, widget), enctype) <- runFormPost articleForm
   usrId <- requireAuthId
   time  <- liftIO getCurrentTime
   case result of
-    FormSuccess (article, tags) -> do
+    FormSuccess (article, tags, tbs) -> do
+      mapM_ (pingTrackback article) tbs
       suc <- runDB $ do
         Entity key old <- getBy404 $ UniqueArticle (fromEnum day) ident
         if articleAuthor old == usrId
@@ -193,7 +213,7 @@ postPreviewR = do
   author <- userScreenName . entityVal <$> requireAuth
   ((result, _), _) <- runFormPost articleForm
   case result of
-    FormSuccess (article, tags) -> do
+    FormSuccess (article, tags, tbs) -> do
       let editable = False
           comments = []
           mCommentForm = Nothing :: Maybe (Widget, Text)
@@ -227,14 +247,13 @@ postTrackbackR (YablogDay date) ident = do
                   <*> (liftM unTextarea <$> iopt textareaField "excerpt")
                   <*> ireq textField "url"
                   <*> iopt textField "blog_name"
-  ans <- runDB $ insertBy trackback
-  case ans of
-    Right _ -> return $ mkXmlResponse [xml|<error>0|]
-    Left  _ -> return $ mkXmlResponse
-               [xml|
-                 <error>1
-                 <message>Already exists.
-               |]
+  runDB $ do
+    ans <- insertBy trackback
+    case ans of
+      Right _ -> return ()
+      Left (Entity k _) -> replace k trackback
+  liftIO $ print $ renderLBS def $ Document (Prologue [] Nothing []) (Element "response" [] [xml|<error>0|]) [] 
+  return $ mkXmlResponse [xml|<error>0|]
 
 getTrackbackR :: YablogDay -> Text -> Handler RepXml
 getTrackbackR (YablogDay date) ident = do
