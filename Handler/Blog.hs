@@ -35,7 +35,8 @@ postCreateR = do
           Left  _ -> return False
       if success
          then do
-           mapM_ (pingTrackback article) tbs
+           errs <- catMaybes <$> mapM (pingTrackback article) tbs
+           setMessageI $ T.unlines errs
            redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
          else do
            setMessageI $ MsgAlreadyExists $ articleTitle article
@@ -90,7 +91,7 @@ getArticleR (YablogDay date) ident = do
     setTitle $ toHtml $ T.concat [articleTitle article, " - ", blogTitle]
     $(widgetFile "article")
 
-pingTrackback :: Article -> String -> Handler (Maybe (String, T.Text))
+pingTrackback :: Article -> String -> Handler (Maybe T.Text)
 pingTrackback article tb = do
   renderUrl <- getUrlRender
   master <- getYesod
@@ -103,7 +104,10 @@ pingTrackback article tb = do
       man = httpManager master
   rsp <- lift $ flip httpLbs man . urlEncodedBody meta =<< parseUrl tb
   if responseStatus rsp /= status200
-    then return $ Just (tb, "HTTP Error: " `T.append` T.concat (LT.toChunks $ LT.decodeUtf8 $ responseBody rsp))
+    then return $ Just $ T.concat [ T.pack tb
+                                  , ": HTTP Error: "
+                                  , T.concat (LT.toChunks $ LT.decodeUtf8 $ responseBody rsp)
+                                  ]
     else do
       case fromDocument <$> parseLBS def (responseBody rsp) of
         Right root -> do
@@ -111,8 +115,8 @@ pingTrackback article tb = do
               msgs = T.concat $ root $/ checkName (== "response") >=> checkName (== "message") >=> content
           if code == "0"
              then return Nothing
-             else return $ Just (tb, msgs)
-        Left  _ -> return $ Just (tb, "malformed response")
+             else return $ Just $ T.concat [T.pack tb, ": ", msgs]
+        Left  _ -> return $ Just $ T.concat [T.pack tb, ": malformed response"]
 
 putArticleR :: YablogDay -> Text -> Handler RepHtml
 putArticleR (YablogDay day) ident = do
@@ -132,7 +136,8 @@ putArticleR (YablogDay day) ident = do
           else return False
       if suc
          then do
-           mapM_ (pingTrackback article) tbs
+           errs <- catMaybes <$> mapM (pingTrackback article) tbs
+           setMessageI $ T.unlines errs
            redirect $ ArticleR (YablogDay day) $ articleIdent article
          else permissionDenied "You are not allowed to edit this article."
     _ -> do
