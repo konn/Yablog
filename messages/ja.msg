@@ -21,7 +21,9 @@ CreatedDate: 作成日
 CreatedTime: 作成時間
 Name: 名前
 Comment: コメント
+DeleteCommentTrackback: コメント・トラックバック削除
 DeleteComment: コメント削除
+DeleteTrackback: トラックバック削除
 Tweet: ツイート
 NoComments: コメントなし
 Trackbacks: トラックバック

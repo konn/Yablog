@@ -119,7 +119,7 @@ commentDeleteForm art html = do
 
 trackbackDeleteForm :: ArticleId -> Form [Trackback]
 trackbackDeleteForm art html = do
-  let tbsSettings = FieldSettings { fsLabel = SomeMessage MsgComments
+  let tbsSettings = FieldSettings { fsLabel = SomeMessage MsgTrackbacks
                                   , fsAttrs = [("class", "span8")]
                                   , fsName  = Just "delete-tbs"
                                   , fsId    = Just "delete-tbs"

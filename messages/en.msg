@@ -22,6 +22,8 @@ CreatedTime: Created time
 Name: Name
 Comment: Comment
 DeleteComment: Delete Comments
+DeleteTrackback: Delete Trackbacks
+DeleteCommentTrackback: Delete Trackbacks and Comments
 Tweet: Tweet
 NoComments: No Comments
 Trackbacks: Trackbacks
