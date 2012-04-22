@@ -5,13 +5,19 @@ import Control.Monad
 import Yesod.Auth
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy as LT
+import qualified Data.Text.Lazy.Encoding as LT
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as LBS
 import Data.List (sortBy)
 import Data.Function
 import Text.Hamlet.XML
 import Text.XML
+import Text.XML.Cursor
 import Blaze.ByteString.Builder
 import Data.Maybe
 import Network.HTTP.Conduit
+import Network.HTTP.Types
 
 postCreateR :: Handler RepHtml
 postCreateR = do
@@ -71,20 +77,20 @@ getArticleR (YablogDay date) ident = do
   defaultLayout $ do
     when (isJust mprev) $ do
       let prev = fromJust mprev
-      addHamletHead
+      toWidgetHead
         [hamlet|
           <link rel="prev previous" href=@{articleLink prev} title=#{articleTitle prev}>
         |]
     when (isJust mnext) $ do
       let next = fromJust mnext
-      addHamletHead
+      toWidgetHead
         [hamlet|
           <link rel="next" href=@{articleLink next} title=#{articleTitle next}>
         |]
     setTitle $ toHtml $ T.concat [articleTitle article, " - ", blogTitle]
     $(widgetFile "article")
 
-pingTrackback :: Article -> String -> Handler ()
+pingTrackback :: Article -> String -> Handler (Maybe (String, T.Text))
 pingTrackback article tb = do
   renderUrl <- getUrlRender
   master <- getYesod
@@ -95,12 +101,18 @@ pingTrackback article tb = do
              ,("blog_name", T.encodeUtf8 blogName)
              ]
       man = httpManager master
-  lift $ do
-    rsp <- flip httpLbs man . urlEncodedBody meta =<< parseUrl tb
-    liftIO $ print rsp
-  liftIO $ print meta
-  return ()
-
+  rsp <- lift $ flip httpLbs man . urlEncodedBody meta =<< parseUrl tb
+  if responseStatus rsp /= status200
+    then return $ Just (tb, "HTTP Error: " `T.append` T.concat (LT.toChunks $ LT.decodeUtf8 $ responseBody rsp))
+    else do
+      case fromDocument <$> parseLBS def (responseBody rsp) of
+        Right root -> do
+          let code = T.concat $ root $/ checkName (== "response") >=> checkName (== "code") >=> content
+              msgs = T.concat $ root $/ checkName (== "response") >=> checkName (== "message") >=> content
+          if code == "0"
+             then return Nothing
+             else return $ Just (tb, msgs)
+        Left  _ -> return $ Just (tb, "malformed response")
 
 putArticleR :: YablogDay -> Text -> Handler RepHtml
 putArticleR (YablogDay day) ident = do
@@ -250,13 +262,28 @@ postTrackbackR (YablogDay date) ident = do
                   <*> (liftM unTextarea <$> iopt textareaField "excerpt")
                   <*> ireq textField "url"
                   <*> iopt textField "blog_name"
-  runDB $ do
-    ans <- insertBy trackback
-    case ans of
-      Right _ -> return ()
-      Left (Entity k _) -> replace k trackback
-  liftIO $ print $ renderLBS def $ Document (Prologue [] Nothing []) (Element "response" [] [xml|<error>0|]) [] 
-  return $ mkXmlResponse [xml|<error>0|]
+  man <- httpManager <$> getYesod
+  curUrl <- getUrlRender <*> pure (ArticleR (YablogDay date) ident)
+  alert <- lift $ do
+    rsp <- flip httpLbs man =<< parseUrl (T.unpack $ trackbackUrl trackback)
+    if responseStatus rsp == status200
+       then
+         if T.encodeUtf8 curUrl `BS.isInfixOf` BS.concat (LBS.toChunks (responseBody rsp))
+         then return Nothing
+         else return $ Just "Your page does not include link to my page."
+       else return $ Just "HTTP Error"
+  case alert of
+    Nothing -> do
+      runDB $ do
+      ans <- insertBy trackback
+      case ans of
+        Right _ -> return ()
+        Left (Entity k _) -> replace k trackback
+      return $ mkXmlResponse [xml|<error>0|]
+    Just err ->
+        return $ mkXmlResponse [xml|<error>1
+                                    <message>#{err}
+                               |]
 
 getTrackbackR :: YablogDay -> Text -> Handler RepXml
 getTrackbackR (YablogDay date) ident = do
