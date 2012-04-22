@@ -113,6 +113,7 @@ pingTrackback article tb = do
         Right root -> do
           let code = T.concat $ root $/ checkName (== "response") >=> checkName (== "code") >=> content
               msgs = T.concat $ root $/ checkName (== "response") >=> checkName (== "message") >=> content
+          liftIO $ print (root, code, msgs)
           if code == "0"
              then return Nothing
              else return $ Just $ T.concat [T.pack tb, ": ", msgs]
