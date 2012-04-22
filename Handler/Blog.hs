@@ -111,8 +111,8 @@ pingTrackback article tb = do
     else do
       case fromDocument <$> parseLBS def (responseBody rsp) of
         Right root -> do
-          let code = T.concat $ root $/ checkName (== "response") >=> checkName (== "code") >=> content
-              msgs = T.concat $ root $/ checkName (== "response") >=> checkName (== "message") >=> content
+          let code = T.concat $ root $/ checkName (== "code") >=> content
+              msgs = T.concat $ root $/ checkName (== "message") >=> content
           liftIO $ print (root, code, msgs)
           if code == "0"
              then return Nothing
