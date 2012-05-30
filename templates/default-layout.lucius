@@ -30,3 +30,55 @@ iframe {
   max-width: 100%;
   height: auto;
 }
+
+
+@media all {
+  .panel {
+        overflow                    : hidden;
+        position                    : absolute;
+        display                     : block;
+        width                       : 100%;
+        padding-top                 : 60px;
+        padding-bottom              : 60px;
+        top                         : 0;
+        /*height: 100%; */ /* uncomment if desktop */
+    }
+
+    .scrollable {
+        overflow                    : scroll;
+        -webkit-overflow-scrolling  : touch;
+    }
+
+    .insideScrollablePanel {
+        margin-left                 : 5%;
+        margin-right                : 5%;
+        width                       : 90%;
+    }
+
+} /* end of medial all */
+
+@media (device-width: 768px) and (orientation: portrait) {
+    .panel {
+        height                       : 934px; /*1004-80*/
+    }
+}
+/*--- browser mode ---*/
+@media (device-width: 768px) and (orientation: landscape) {
+    .panel {
+        height                       : 668px; /*748-80*/
+    }
+}
+
+/*--- iphone ---*/
+/*--- full screen mode ---*/
+@media (max-width: 480px) and (orientation: portrait) {
+    .panel {
+        height                       : 380px; /*460-80*/
+    }
+}
+/*--- browser mode ---*/
+@media (max-width: 480px) and (orientation: landscape) {
+    .panel {
+        height                       : 220px; /*300-80*/
+    }
+}
