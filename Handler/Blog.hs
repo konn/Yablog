@@ -16,7 +16,7 @@ import Text.XML
 import Text.XML.Cursor
 import Blaze.ByteString.Builder
 import Data.Maybe
-import Network.HTTP.Conduit
+import Network.HTTP.Conduit hiding (def)
 import Network.HTTP.Types
 
 postCreateR :: Handler RepHtml

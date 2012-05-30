@@ -11,8 +11,11 @@
 $forall (no, ents) <- articles
  $with (art, cs, ts) <-  ents
   <div .well>
-    ^{articleView (Just $ (++) "art" $ (++) (show no) "-") art}
+    ^{articleView (Just $ (++) "art" ((++) (show no) "-")) $ makeBrief art}
     <div .navi-links>
+      <a href=@{articleLink art} .btn>
+        _{MsgReadMore} &raquo;
+      <br />
       <a href=@{articleLink art}>
         Permalink
       \ | #

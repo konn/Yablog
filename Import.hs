@@ -10,6 +10,7 @@ module Import
     , Text
     , articleView
     , articleLink
+    , makeBrief
     , makeSnippet
 #if __GLASGOW_HASKELL__ < 740
     , (<>)
@@ -28,6 +29,7 @@ import Text.Pandoc hiding (Null)
 import Yesod.Auth
 import Data.Time
 import Forms
+import Data.Maybe
 
 articleView :: Maybe String -> Article -> Widget
 articleView mid article = do
@@ -56,6 +58,28 @@ makeSnippet :: Int -> Text -> Text
 makeSnippet len t | T.length t <= len = t
                   | otherwise         = T.take len t `T.append` "..."
 
+makeBrief :: Article -> Article
+makeBrief art@Article{articleBody=body} = art {articleBody = truncated}
+  where
+    Just reader = lookup (fromMaybe "markdown" $ articleMarkup art) readers
+    Just writer = lookup (fromMaybe "markdown" $ articleMarkup art) writers
+    opts = defaultWriterOptions
+           { writerHTMLMathMethod =
+               MathJax "http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+           , writerHighlight = True
+           , writerHtml5 = True
+           , writerIdentifierPrefix = ""
+           }
+    pandoc@(Pandoc metas bs) = reader defaultParserState body
+    truncated =
+      case span (not . isPara) bs of
+        (src, takeWhile (not . isHead) -> as) ->
+          writer opts (Pandoc metas $ src ++ take 3 as)
+    isPara (Para _) = True
+    isPara _        = False
+    isHead (Header _ _) = True
+    isHead _          = False
+ 
 #if __GLASGOW_HASKELL__ < 740
 infixr 5 <>
 (<>) :: Monoid m => m -> m -> m

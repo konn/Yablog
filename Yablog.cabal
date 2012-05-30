@@ -1,17 +1,23 @@
 name:              Yablog
-version:           0.0.1.1
+version:           0.0.1.3
 license:           BSD3
 license-file:      LICENSE
 author:            Hiromi ISHII
 maintainer:        Hiromi ISHII
-synopsis:          The greatest Yesod web application ever.
-description:       I'm sure you can say something clever here if you try.
+synopsis:          A simple blog engine powered by Yesod.
+description:       A simple blog engine powered by Yesod.
 category:          Web
 stability:         Experimental
 cabal-version:     >= 1.6
 build-type:        Simple
-homepage:          http://Yablog.yesodweb.com/
+homepage:          http://gitweb.konn-san.com/repo/Yablog/tree/master
 
+extra-source-files:
+  config/models, config/routes, messages/*.msg,
+  templates/*.hamlet, templates/*.julius, templates/*.lucius
+data-files:
+  config/mongoDB.yml, config/settings.yml, config/robots.txt,
+  static/css/*.css, static/img/*.png, static/js/*.js
 Flag dev
     Description:   Turn on development settings, like auto-reload templates.
     Default:       False
@@ -19,6 +25,7 @@ Flag dev
 Flag library-only
     Description:   Build for use with "yesod devel"
     Default:       False
+
 
 library
     if flag(library-only)
@@ -51,6 +58,7 @@ library
                 GADTs
                 GeneralizedNewtypeDeriving
                 FlexibleContexts
+                ViewPatterns
                 EmptyDataDecls
 
 executable         Yablog
@@ -79,7 +87,7 @@ executable         Yablog
                 EmptyDataDecls
 
     build-depends: base                          >= 4          && < 5
-                 , yesod-platform                == 1.0.1
+                 , yesod-platform                == 1.0.*
                  , yesod                         >= 1.0        && < 1.1
                  , yesod-core                    >= 1.0        && < 1.1
                  , yesod-auth                    >= 1.0        && < 1.1
@@ -112,3 +120,12 @@ executable         Yablog
                  , pandoc-types                  >= 1.9        && < 2.0
                  , xml-hamlet                    >= 0.3        && < 0.4
                  , xml-conduit                   >= 0.7        && < 0.8
+
+source-repository head
+  type:     git
+  location: https://github.com/konn/Yablog
+
+source-repository this
+  type:     git
+  location: https://github.com/konn/Yablog
+  tag: 0.0.1.3
