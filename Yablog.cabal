@@ -83,6 +83,7 @@ executable         Yablog
                 TypeFamilies
                 GADTs
                 GeneralizedNewtypeDeriving
+                ViewPatterns
                 FlexibleContexts
                 EmptyDataDecls
 
