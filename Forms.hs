@@ -18,6 +18,7 @@ import Yesod.Default.Config
 import qualified Network.Wai as W
 import qualified Data.Text as T
 import Data.Monoid
+import qualified Data.Map as M
 
 type URL = String
 articleForm :: Form (Article, [Text], [URL], Maybe FileInfo)
@@ -31,7 +32,7 @@ articleForm' mart mtags htm = do
     unless accessible $ do
       permissionDenied "You are not in admins"
   now  <- liftIO getCurrentTime
-  askFiles >>= liftIO . print
+  askFiles >>= liftIO . print . liftM (M.map (const ""))
   askParams >>= liftIO . print
   markup <- extraMarkup . appExtra . settings <$> lift getYesod
   ident <- maybe (lift newIdent) return $ articleIdent <$> mart
@@ -106,8 +107,8 @@ articleForm' mart mtags htm = do
                 tbs  = maybe [] (lines . T.unpack . unTextarea) <$> aopt textareaField trackbackUrls Nothing
                 imageSettings = FieldSettings { fsLabel = SomeMessage MsgImage
                                               , fsTooltip = Nothing
-                                              , fsName = Just "file01"
-                                              , fsId   = Just "file01"
+                                              , fsName = Just "file"
+                                              , fsId   = Just "file"
                                               , fsAttrs = []
                                               }
             in (,,,) <$> art <*> tags <*> tbs <*> fileAFormOpt imageSettings

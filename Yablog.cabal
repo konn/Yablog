@@ -125,6 +125,7 @@ executable         Yablog
                  , network                       >= 2.3        && < 2.4
                  , filepath                      >= 1.2        && < 1.3
                  , directory                     >= 1.1        && < 1.2
+                 , containers                    >= 0.4        && < 0.5
 
 source-repository head
   type:     git
