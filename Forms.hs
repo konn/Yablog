@@ -107,9 +107,9 @@ articleForm' mart mtags htm = do
                 tbs  = maybe [] (lines . T.unpack . unTextarea) <$> aopt textareaField trackbackUrls Nothing
                 imageSettings = FieldSettings { fsLabel = SomeMessage MsgImage
                                               , fsTooltip = Nothing
-                                              , fsName = Just "file"
-                                              , fsId   = Just "file"
-                                              , fsAttrs = []
+                                              , fsName = Nothing
+                                              , fsId   = Nothing
+                                              , fsAttrs = [("class", "file")]
                                               }
             in (,,,) <$> art <*> tags <*> tbs <*> fileAFormOpt imageSettings
        let appendFileWidget = [whamlet| <a .btn #append-file>Append |]
