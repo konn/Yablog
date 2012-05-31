@@ -109,7 +109,9 @@ articleForm' mart mtags htm = do
        let appendFileWidget =
                [whamlet|
                   <input type=file #file0 name=file0>
-                  <a .btn #append-file>Append |]
+                  <a .btn #append-file>Append
+                  <br>
+               |]
        return (r, widget `mappend` appendFileWidget)
 
 commentDeleteForm :: ArticleId -> Form ([Comment], Bool)
