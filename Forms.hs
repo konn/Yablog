@@ -31,6 +31,7 @@ articleForm' mart mtags htm = do
       permissionDenied "You are not in admins"
   now  <- liftIO getCurrentTime
   askFiles >>= liftIO . print
+  askEnv >>= liftIO . print
   markup <- extraMarkup . appExtra . settings <$> lift getYesod
   ident <- maybe (lift newIdent) return $ articleIdent <$> mart
   let day  = utctDay now
