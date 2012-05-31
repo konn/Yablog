@@ -63,9 +63,6 @@ procAttachment article (Just finfo) = do
     LBS.writeFile (dir </> T.unpack (fileName finfo)) (fileContent finfo)
 procAttachment _ _ = return ()
 
-dayToString :: Day -> String
-dayToString = formatTime defaultTimeLocale "%Y%m%d"
-
 getCreateR :: Handler RepHtml
 getCreateR = do
   (widget, enctype) <- generateFormPost articleForm

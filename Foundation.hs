@@ -18,6 +18,7 @@ module Foundation
     , isAdmin
     , notice
     , commentAnchor
+    , dayToString
     , hostToString
     ) where
 
@@ -56,7 +57,10 @@ import Network.HTTP.Types
 import qualified Data.ByteString.Lazy.Char8 as LBS
 import Network.Socket
 import Control.Monad
+import Network.URI
 import System.IO.Unsafe
+import Text.Pandoc
+import Data.List (isPrefixOf)
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -113,8 +117,28 @@ markupRender mid article = do
   extra <- appExtra . settings <$> getYesod
   usr <- runDB $ get404 $ articleAuthor article
   let markup = fromMaybe "markdown" $ articleMarkup article <|> extraMarkup extra
-      trans  = maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr
+      trans  = bottomUp (procAttach article) . maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr
   return $ renderMarkup mid markup trans $ articleBody article
+
+dayToString :: Day -> String
+dayToString = formatTime defaultTimeLocale "%Y%m%d"
+
+procAttach :: Article -> Inline -> Inline
+procAttach article inl =
+  case inl of
+    Link  is targ -> Link  is $ rewriteUrl targ
+    Image is targ -> Image is $ rewriteUrl targ
+    _             -> inl
+  where
+    rewriteUrl t@(url, title)
+        | isRelativeReference url && not ("/" `isPrefixOf` url)
+            = (concat [ "/static/files/"
+                      , dayToString (toEnum $ articleCreatedDate article)
+                      , "/"
+                      , T.unpack $ articleIdent article
+                      , "/"
+                      , url], title)
+        | otherwise = t
 
 -- Please see the documentation for the Yesod typeclass. There are a number
 -- of settings which can be configured by overriding methods here.
