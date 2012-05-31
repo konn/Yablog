@@ -33,3 +33,8 @@ NewComment: 新規コメントのお知らせ
 YouHaveNewCommentFor url@T.Text: あなたの記事にコメントが付きました: #{url}
 Search: 検索
 ReadMore: 続きを読む
+IsSpam: スパムとして報告
+UserSettings: ユーザ設定
+BanSettings: BAN 設定
+Settings: 設定
+Bans: BANs

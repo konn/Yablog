@@ -1,5 +1,19 @@
 <h2>
-  Settings
-<form method=post action=@{UserSettingsR} enctype=#{enctype}>
-  ^{widget}
-  <input type=submit>
+  _{MsgSettings}
+<div .tabbalble>
+  <ul .nav .nav-tabs>
+    <li .active>
+      <a href="#settings" data-toggle="tab">
+        _{MsgUserSettings}
+    <li>
+      <a href="#ban-settings" data-toggle="tab" #show-ban-settings>
+        _{MsgBanSettings}
+  <div .tab-content>
+    <div .active .tab-pane #settings>
+      <form method=post action=@{UserSettingsR} enctype=#{enctype}>
+        ^{widget}
+        <input type=submit>
+    <div .tab-pane #ban-settings>
+      <form method=post action=@{BanSettingsR} enctype=#{banEnctype}>
+        ^{banWidget}
+        <input type=submit>

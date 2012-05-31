@@ -1,6 +1,7 @@
 module Handler.User where
 import Import
 import qualified Data.Text as T
+import Data.Maybe
 
 userForm :: Form User
 userForm html = do
@@ -21,10 +22,37 @@ userForm html = do
          <*> (T.filter (/= '\r') . unTextarea <$> areq textareaField "profile" (Just $ Textarea profile))
          <*> aopt textField "Amazon Associate" (Just amazon)
 
+banForm :: Form [Entity Banned]
+banForm html = do
+  Entity _ user <- lift requireAuth
+  bans <- lift $ runDB $ filter (isJust . bannedIp . entityVal) <$> selectList [] []
+  let bansSettings = FieldSettings { fsLabel = SomeMessage MsgBans
+                                   , fsAttrs = [("class", "span8")]
+                                   , fsName  = Just "delete-bans"
+                                   , fsId    = Just "delete-bans"
+                                   , fsTooltip = Nothing
+                                   }
+  flip renderBootstrap html $
+    areq (multiSelectFieldList [(mkOptName b, e) | e@(Entity _ b) <- bans]) bansSettings Nothing
+  where
+    mkOptName b = T.pack $ fromJust $ bannedIp b
+
+postBanSettingsR :: Handler RepHtml
+postBanSettingsR = do
+  Entity key _ <- requireAuth
+  ((result, _), _) <- runFormPost banForm
+  liftIO $ print result
+  case result of
+    FormSuccess bans -> do
+         runDB $ mapM_ (delete . entityKey) bans
+         redirect UserSettingsR
+    _ -> permissionDenied "!!!!YOU ARE NOT ALLOWED TO CHANGE!!!!"
+
 getUserSettingsR :: Handler RepHtml
 getUserSettingsR = do
   Entity key usr <- requireAuth
   (widget, enctype) <- generateFormPost userForm
+  (banWidget, banEnctype) <- generateFormPost banForm
   defaultLayout $ do
     setTitle "Settings"
     $(widgetFile "user-settings")

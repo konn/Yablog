@@ -28,6 +28,7 @@ Comment
   password  Text Maybe
   createdAt UTCTime Asc
   article   ArticleId
+  ipAddress String
   UniqueComment article author createdAt
   deriving Show Eq
 
@@ -43,6 +44,11 @@ Trackback
   url Text Eq
   blogName Text Maybe
   UniqueTrackback article url
+  deriving Show Eq
+
+Banned
+  ip String Eq Maybe
+  author String Eq Maybe
   deriving Show Eq
 
  -- By default this file is used in Model.hs (which is imported by Foundation.hs)

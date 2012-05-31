@@ -18,3 +18,4 @@
 /article/#YablogDay/#T.Text/trackback/delete DeleteTrackbackR POST
 
 /user/settings UserSettingsR GET PUT POST
+/settings/ban BanSettingsR POST

@@ -33,3 +33,8 @@ NewComment: You have new comment
 YouHaveNewCommentFor url@T.Text: You have new comment for: #{url}
 Search: Search
 ReadMore: Read More
+IsSpam: Report as SPAM
+UserSettings: User Settings
+BanSettings: BAN Settings
+Settings: Settings
+Bans: BANs

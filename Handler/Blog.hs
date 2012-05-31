@@ -18,6 +18,7 @@ import Blaze.ByteString.Builder
 import Data.Maybe
 import Network.HTTP.Conduit hiding (def)
 import Network.HTTP.Types
+import qualified Network.Wai as W
 
 postCreateR :: Handler RepHtml
 postCreateR = do
@@ -183,6 +184,9 @@ deleteArticleR (YablogDay day) ident = do
 
 postCommentR :: YablogDay -> Text -> Handler RepHtml
 postCommentR (YablogDay date) ident = do
+  addr <- show . W.remoteHost <$> waiRequest
+  ans <- runDB $ selectFirst [BannedIp ==. Just addr] []
+  when (isJust ans) $ notFound
   Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
   ((result, _), _) <- runFormPost $ commentForm' Nothing key
   case result of
@@ -240,9 +244,11 @@ deleteCommentR (YablogDay day) ident = do
   when (uid /= articleAuthor art) $ do
     permissionDenied "You are not allowed to delete those comment(s)."
   case result of
-    FormSuccess cs -> do
+    FormSuccess (cs, spam) -> do
       when (any ((/= aid) . commentArticle) cs) $ permissionDenied "You can't delete that comment."
-      runDB $ mapM_ (\c -> deleteBy $ UniqueComment aid (commentAuthor c) (commentCreatedAt c)) cs
+      runDB $ forM_ cs $ \c -> do
+        deleteBy $ UniqueComment aid (commentAuthor c) (commentCreatedAt c)
+        insert $ Banned (Just $ commentIpAddress c) Nothing
       redirect $ ArticleR (YablogDay day) (articleIdent art)
     _ -> do
       setMessageI MsgInvalidInput

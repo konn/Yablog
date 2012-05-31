@@ -15,6 +15,7 @@ import Data.Maybe
 import Control.Arrow
 import Markups
 import Yesod.Default.Config
+import qualified Network.Wai as W
 import qualified Data.Text as T
 
 type URL = String
@@ -101,7 +102,7 @@ articleForm' mart mtags htm = do
                 tbs  = maybe [] (lines . T.unpack . unTextarea) <$> aopt textareaField trackbackUrls Nothing
             in (,,) <$> art <*> tags <*> tbs
 
-commentDeleteForm :: ArticleId -> Form [Comment]
+commentDeleteForm :: ArticleId -> Form ([Comment], Bool)
 commentDeleteForm art html = do
   let commentSettings = FieldSettings { fsLabel = SomeMessage MsgComments
                                       , fsAttrs = [("class", "span8")]
@@ -109,9 +110,16 @@ commentDeleteForm art html = do
                                       , fsId    = Just "delete-contents"
                                       , fsTooltip = Nothing
                                       }
+      isSpamSettings = FieldSettings { fsLabel   = SomeMessage MsgIsSpam
+                                     , fsAttrs   = []
+                                     , fsName    = Just "report-as-spam"
+                                     , fsId      = Just "report-as-spam"
+                                     , fsTooltip = Nothing
+                                     }
   cs <- lift $ runDB $ selectList [CommentArticle ==. art] []
   flip renderBootstrap html $
-    areq (multiSelectFieldList [(mkOptName c, c) | Entity _ c <- cs]) commentSettings Nothing
+    (,) <$> areq (multiSelectFieldList [(mkOptName c, c) | Entity _ c <- cs]) commentSettings Nothing
+        <*> areq checkBoxField isSpamSettings (Just False)
   where
     mkOptName c = T.concat [ commentBody c, " - ", commentAuthor c, " / "
                            , T.pack$ show $ commentCreatedAt c
@@ -135,6 +143,7 @@ trackbackDeleteForm art html = do
 
 commentForm' :: Maybe Comment -> ArticleId -> Form Comment
 commentForm' mcom art html = do
+  ipaddr <- show . W.remoteHost <$> lift waiRequest
   musr <- lift  maybeAuth
   time <- liftIO getCurrentTime
   let commentField = FieldSettings { fsLabel = SomeMessage MsgComment
@@ -155,6 +164,7 @@ commentForm' mcom art html = do
             <*> pure (commentPassword =<< mcom)
             <*> pure time
             <*> pure art
+            <*> pure ipaddr
 
 commentForm :: Maybe Comment -> Article -> Form Comment
 commentForm mcom art html = do
