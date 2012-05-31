@@ -118,7 +118,7 @@ markupRender mid article = do
   extra <- appExtra . settings <$> getYesod
   usr <- runDB $ get404 $ articleAuthor article
   let markup = fromMaybe "markdown" $ articleMarkup article <|> extraMarkup extra
-      trans  = bottomUp (procAttach article) . maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr
+      trans  = bottomUp (procAttach article) . (maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr)
   return $ renderMarkup mid markup trans $ articleBody article
 
 dayToString :: Day -> String
