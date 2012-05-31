@@ -37,8 +37,6 @@ articleForm' mart mtags htm = do
   fs <- askFiles
   let files = concat $ maybeToList (M.elems . M.filterWithKey (const . T.isPrefixOf "file") <$> fs)
   tell Multipart
-  params <- askParams
-  liftIO $ print (fs, files) >> putStr "are: " >> print params
   markup <- extraMarkup . appExtra . settings <$> lift getYesod
   ident <- maybe (lift newIdent) return $ articleIdent <$> mart
   let day  = utctDay now
