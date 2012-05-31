@@ -19,10 +19,10 @@ import qualified Network.Wai as W
 import qualified Data.Text as T
 
 type URL = String
-articleForm :: Form (Article, [Text], [URL])
+articleForm :: Form (Article, [Text], [URL], Maybe FileInfo)
 articleForm = articleForm' Nothing Nothing
 
-articleForm' :: Maybe Article -> Maybe [Text] -> Form (Article, [Text], [URL])
+articleForm' :: Maybe Article -> Maybe [Text] -> Form (Article, [Text], [URL], Maybe FileInfo)
 articleForm' mart mtags htm = do
   Entity usrId usr <- lift requireAuth
   lift $ do
@@ -100,7 +100,13 @@ articleForm' mart mtags htm = do
                               <*> pure (articleModifiedAt =<< mart)
                 tags = T.words . fromMaybe "" <$> aopt textField tagsSettings (Just . T.unwords <$> mtags)
                 tbs  = maybe [] (lines . T.unpack . unTextarea) <$> aopt textareaField trackbackUrls Nothing
-            in (,,) <$> art <*> tags <*> tbs
+                imageSettings = FieldSettings { fsLabel = SomeMessage MsgImage
+                                              , fsTooltip = Nothing
+                                              , fsName = Just "image"
+                                              , fsId   = Just "image"
+                                              , fsAttrs = []
+                                              }
+            in (,,,) <$> art <*> tags <*> tbs <*> fileAFormOpt imageSettings
 
 commentDeleteForm :: ArticleId -> Form ([Comment], Bool)
 commentDeleteForm art html = do

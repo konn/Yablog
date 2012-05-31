@@ -38,3 +38,4 @@ UserSettings: ユーザ設定
 BanSettings: BAN 設定
 Settings: 設定
 Bans: BANs
+Image: 画像

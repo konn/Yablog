@@ -3,7 +3,9 @@ import Data.Time
 import Import
 import Control.Monad
 import Yesod.Auth
+import Yesod.Static
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.Encoding as LT
@@ -19,12 +21,13 @@ import Data.Maybe
 import Network.HTTP.Conduit hiding (def)
 import Network.HTTP.Types
 import qualified Network.Wai as W
+import System.Locale
 
 postCreateR :: Handler RepHtml
 postCreateR = do
   ((result, widget), enctype) <- runFormPost articleForm
   case result of
-    FormSuccess (article, tags, tbs) -> do
+    FormSuccess (article, tags, tbs, mfinfo) -> do
       usr <- requireAuthId
       when (articleAuthor article /= usr) $ redirect RootR
       success <- runDB $ do
@@ -36,6 +39,11 @@ postCreateR = do
           Left  _ -> return False
       if success
          then do
+           when (isJust mfinfo) $ do
+             let Just finfo = mfinfo
+             renderUrl <- getUrlRender
+             liftIO $ T.putStrLn $ renderUrl $
+                StaticR $ StaticRoute ["imgs", T.pack $ show (YablogDay $ toEnum $ articleCreatedDate article), fileName finfo ] []
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
            unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
@@ -125,7 +133,7 @@ putArticleR (YablogDay day) ident = do
   usrId <- requireAuthId
   time  <- liftIO getCurrentTime
   case result of
-    FormSuccess (article, tags, tbs) -> do
+    FormSuccess (article, tags, tbs, mfinfo) -> do
       suc <- runDB $ do
         Entity key old <- getBy404 $ UniqueArticle (fromEnum day) ident
         if articleAuthor old == usrId
@@ -259,7 +267,7 @@ postPreviewR = do
   author <- userScreenName . entityVal <$> requireAuth
   ((result, _), _) <- runFormPost articleForm
   case result of
-    FormSuccess (article, tags, tbs) -> do
+    FormSuccess (article, tags, tbs, mfinfo) -> do
       let editable = False
           comments = []
           mCommentTrackbackForm = Nothing :: Maybe (Widget, Text, Widget, Text)

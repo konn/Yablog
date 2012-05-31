@@ -38,3 +38,5 @@ UserSettings: User Settings
 BanSettings: BAN Settings
 Settings: Settings
 Bans: BANs
+Image: Image
+
