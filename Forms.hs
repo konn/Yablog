@@ -19,6 +19,8 @@ import qualified Network.Wai as W
 import qualified Data.Text as T
 import Data.Monoid
 import qualified Data.Map as M
+import Control.Monad.Writer.Class
+import Control.Monad.RWS ()
 
 type URL = String
 articleForm :: Form (Article, [Text], [URL], [FileInfo])
@@ -34,7 +36,9 @@ articleForm' mart mtags htm = do
   now  <- liftIO getCurrentTime
   fs <- askFiles
   let files = concat $ maybeToList (M.elems . M.filterWithKey (const . T.isPrefixOf "file") <$> fs)
-  liftIO $ print (fs, files) >> putStr "are-" >> print askParams
+  tell Multipart
+  params <- askParams
+  liftIO $ print (fs, files) >> putStr "are: " >> print params
   markup <- extraMarkup . appExtra . settings <$> lift getYesod
   ident <- maybe (lift newIdent) return $ articleIdent <$> mart
   let day  = utctDay now

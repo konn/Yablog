@@ -126,6 +126,7 @@ executable         Yablog
                  , filepath                      >= 1.2        && < 1.3
                  , directory                     >= 1.1        && < 1.2
                  , containers                    >= 0.4        && < 0.5
+                 , mtl                           >= 2.0        && < 2.1
 
 source-repository head
   type:     git
