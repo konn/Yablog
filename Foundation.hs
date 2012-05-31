@@ -60,6 +60,7 @@ import Control.Monad
 import Network.URI
 import System.IO.Unsafe
 import Text.Pandoc
+import Debug.Trace
 import Data.List (isPrefixOf)
 
 -- | The site argument for your application. This can be a good place to
@@ -125,7 +126,7 @@ dayToString = formatTime defaultTimeLocale "%Y%m%d"
 
 procAttach :: Article -> Inline -> Inline
 procAttach article inl =
-  case inl of
+  case trace (show inl) inl of
     Link  is targ -> Link  is $ rewriteUrl targ
     Image is targ -> Image is $ rewriteUrl targ
     _             -> inl
