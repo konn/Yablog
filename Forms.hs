@@ -140,10 +140,9 @@ trackbackDeleteForm art html = do
     mkOptName t = fromMaybe (fromMaybe (trackbackUrl t) $ trackbackBlogName t) $
                     trackbackTitle t
 
-
 commentForm' :: Maybe Comment -> ArticleId -> Form Comment
 commentForm' mcom art html = do
-  ipaddr <- show . W.remoteHost <$> lift waiRequest
+  ipaddr <- hostToString . W.remoteHost <$> lift waiRequest
   musr <- lift  maybeAuth
   time <- liftIO getCurrentTime
   let commentField = FieldSettings { fsLabel = SomeMessage MsgComment

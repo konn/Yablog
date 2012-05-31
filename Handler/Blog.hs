@@ -184,9 +184,9 @@ deleteArticleR (YablogDay day) ident = do
 
 postCommentR :: YablogDay -> Text -> Handler RepHtml
 postCommentR (YablogDay date) ident = do
-  addr <- show . W.remoteHost <$> waiRequest
+  addr <- hostToString . W.remoteHost <$> waiRequest
   ans <- runDB $ selectFirst [BannedIp ==. Just addr] []
-  when (isJust ans) $ notFound
+  when (isJust ans) $ permissionDenied "YOU ARE BANNED TO COMMENT"
   Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
   ((result, _), _) <- runFormPost $ commentForm' Nothing key
   case result of

@@ -2,6 +2,7 @@ module Handler.User where
 import Import
 import qualified Data.Text as T
 import Data.Maybe
+import Control.Monad
 
 userForm :: Form User
 userForm html = do
@@ -24,7 +25,6 @@ userForm html = do
 
 banForm :: Form [Entity Banned]
 banForm html = do
-  Entity _ user <- lift requireAuth
   bans <- lift $ runDB $ filter (isJust . bannedIp . entityVal) <$> selectList [] []
   let bansSettings = FieldSettings { fsLabel = SomeMessage MsgBans
                                    , fsAttrs = [("class", "span8")]
@@ -39,7 +39,8 @@ banForm html = do
 
 postBanSettingsR :: Handler RepHtml
 postBanSettingsR = do
-  Entity key _ <- requireAuth
+  isAdm <- isAdmin . entityVal =<< requireAuth
+  unless isAdm $ permissionDenied "!!! YOU ARE NOT ALLOWED TO CHANGE BAN !!!"           
   ((result, _), _) <- runFormPost banForm
   liftIO $ print result
   case result of

@@ -18,6 +18,7 @@ module Foundation
     , isAdmin
     , notice
     , commentAnchor
+    , hostToString
     ) where
 
 import Prelude
@@ -53,6 +54,7 @@ import qualified Data.Text.Encoding as T
 import Markups
 import Network.HTTP.Types
 import qualified Data.ByteString.Lazy.Char8 as LBS
+import Network.Socket
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -257,3 +259,7 @@ commentAnchor c = T.concat [ "comment-"
                            , "-"
                            , T.pack $ formatTime defaultTimeLocale "%Y-%m-%d-%H-%M-%S" $ commentCreatedAt c
                            ]
+hostToString :: SockAddr -> String
+hostToString (SockAddrUnix str) = str
+hostToString (SockAddrInet _ host) = show host
+hostToString (SockAddrInet6 _ finfo host scope) = show (finfo, host, scope)
