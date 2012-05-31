@@ -23,6 +23,7 @@ import qualified Network.Wai as W
 import Settings
 import System.FilePath
 import System.Directory
+import System.Locale
 
 postCreateR :: Handler RepHtml
 postCreateR = do
@@ -55,13 +56,15 @@ procAttachment :: Article -> Maybe FileInfo -> Handler ()
 procAttachment article (Just finfo) = do
   renderUrl <- getUrlRender
   let dir = staticDir </> "files"
-                      </> show (toEnum $ articleCreatedDate article :: Day)
+                      </> dayToString (toEnum $ articleCreatedDate article :: Day)
                       </> T.unpack (articleIdent article)
   liftIO $ do
     createDirectoryIfMissing True dir
     LBS.writeFile (dir </> T.unpack (fileName finfo)) (fileContent finfo)
 procAttachment _ _ = return ()
 
+dayToString :: Day -> String
+dayToString = formatTime defaultTimeLocale "%Y%m%d"
 
 getCreateR :: Handler RepHtml
 getCreateR = do
