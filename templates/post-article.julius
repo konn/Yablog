@@ -1,4 +1,5 @@
 $(document).ready(function(){
+    var filecount = 0;
     function updatePreview(data, type) {
 	$("#preview-contents").html(data);
     }
@@ -7,5 +8,10 @@ $(document).ready(function(){
 	var title = $('#title').val()
 	$("#preview-contents").contents().find("html").load("/preview", $("#edit-form").serializeArray());
     }
+    function appendFileForm() {
+	filecount += 1;
+	$(":file:last").after("<br /><input type=\"file\" name=\"file" + filecount + "\" id=\"file"+filecount+"\">")
+    }
     $('#show-preview').click(function(){ reloadPreview(); });
+    $('#append-file').click(function() { appendFileForm(); });
 });
