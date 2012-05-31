@@ -52,8 +52,8 @@ postCreateR = do
       setMessageI MsgInvalidInput
       defaultLayout $(widgetFile "post-article")
 
-procAttachment :: Article -> Maybe FileInfo -> Handler ()
-procAttachment article (Just finfo) = do
+procAttachment :: Article -> [FileInfo] -> Handler ()
+procAttachment article fs = forM_ fs $ \finfo -> do
   renderUrl <- getUrlRender
   let dir = staticDir </> "files"
                       </> dayToString (toEnum $ articleCreatedDate article :: Day)

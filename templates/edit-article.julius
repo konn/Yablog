@@ -10,7 +10,7 @@ $(document).ready(function(){
     }
     function appendFileForm() {
 	filecount += 1;
-	$(":file:last").after("<input type=\"file\" name=\"file" + filecount + "\" id=\"file"+filecount+"\">")
+	$(":file:last").after("<br /><input type=\"file\" name=\"file" + filecount + "\" id=\"file"+filecount+"\">")
     }
     $('#show-preview').click(function(){ reloadPreview(); });
     $('#append-file').click(function() { appendFileForm(); });

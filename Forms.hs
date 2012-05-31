@@ -21,10 +21,10 @@ import Data.Monoid
 import qualified Data.Map as M
 
 type URL = String
-articleForm :: Form (Article, [Text], [URL], Maybe FileInfo)
+articleForm :: Form (Article, [Text], [URL], [FileInfo])
 articleForm = articleForm' Nothing Nothing
 
-articleForm' :: Maybe Article -> Maybe [Text] -> Form (Article, [Text], [URL], Maybe FileInfo)
+articleForm' :: Maybe Article -> Maybe [Text] -> Form (Article, [Text], [URL], [FileInfo])
 articleForm' mart mtags htm = do
   Entity usrId usr <- lift requireAuth
   lift $ do
@@ -32,8 +32,8 @@ articleForm' mart mtags htm = do
     unless accessible $ do
       permissionDenied "You are not in admins"
   now  <- liftIO getCurrentTime
-  askFiles >>= liftIO . print . liftM (M.map (const ""))
-  askParams >>= liftIO . print
+  fs <- askFiles
+  let files = concat $ maybeToList (M.elems . M.filterWithKey (const . T.isPrefixOf "file") <$> fs)
   markup <- extraMarkup . appExtra . settings <$> lift getYesod
   ident <- maybe (lift newIdent) return $ articleIdent <$> mart
   let day  = utctDay now
@@ -105,14 +105,11 @@ articleForm' mart mtags htm = do
                               <*> pure (articleModifiedAt =<< mart)
                 tags = T.words . fromMaybe "" <$> aopt textField tagsSettings (Just . T.unwords <$> mtags)
                 tbs  = maybe [] (lines . T.unpack . unTextarea) <$> aopt textareaField trackbackUrls Nothing
-                imageSettings = FieldSettings { fsLabel = SomeMessage MsgImage
-                                              , fsTooltip = Nothing
-                                              , fsName = Nothing
-                                              , fsId   = Nothing
-                                              , fsAttrs = [("class", "file0")]
-                                              }
-            in (,,,) <$> art <*> tags <*> tbs <*> fileAFormOpt imageSettings
-       let appendFileWidget = [whamlet| <a .btn #append-file>Append |]
+            in (,,,) <$> art <*> tags <*> tbs <*> pure files
+       let appendFileWidget =
+               [whamlet|
+                  <input type=file #file0 name=file0>
+                  <a .btn #append-file>Append |]
        return (r, widget `mappend` appendFileWidget)
 
 commentDeleteForm :: ArticleId -> Form ([Comment], Bool)
