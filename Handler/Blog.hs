@@ -21,7 +21,6 @@ import Data.Maybe
 import Network.HTTP.Conduit hiding (def)
 import Network.HTTP.Types
 import qualified Network.Wai as W
-import System.Locale
 
 postCreateR :: Handler RepHtml
 postCreateR = do
@@ -39,11 +38,7 @@ postCreateR = do
           Left  _ -> return False
       if success
          then do
-           when (isJust mfinfo) $ do
-             let Just finfo = mfinfo
-             renderUrl <- getUrlRender
-             liftIO $ T.putStrLn $ renderUrl $
-                StaticR $ StaticRoute ["imgs", T.pack $ show (YablogDay $ toEnum $ articleCreatedDate article), fileName finfo ] []
+           procAttachment mfinfo
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
            unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
@@ -53,6 +48,15 @@ postCreateR = do
     _ -> do
       setMessageI MsgInvalidInput
       defaultLayout $(widgetFile "post-article")
+
+procAttachment :: Maybe FileInfo -> Handler ()
+procAttachment (Just finfo) = do
+  renderUrl <- getUrlRender
+  liftIO $ T.putStrLn $ renderUrl $
+    StaticR $ StaticRoute ["imgs", T.pack $ show (YablogDay $ toEnum $ articleCreatedDate article)
+                          , fileName finfo ] []
+procAttachment _ = return ()
+
 
 getCreateR :: Handler RepHtml
 getCreateR = do
@@ -145,6 +149,7 @@ putArticleR (YablogDay day) ident = do
           else return False
       if suc
          then do
+           procAttachment mfinfo
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
            unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (YablogDay day) $ articleIdent article
