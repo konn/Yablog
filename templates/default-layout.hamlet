@@ -16,13 +16,12 @@ $maybe msg <- mmsg
           <li>
             <a href=@{ArticleR (toEnum $ articleCreatedDate art) (articleIdent art)}>
               #{articleTitle art}
-        <li .nav-header>
-          <i .icon-tags> #
-          Tags
-        $forall tag <- tags
+        $maybe cse <- mcse
+          <li .nav-header>
+            <i .icon-search> #
+            Search
           <li>
-            <a href=@{TagR tag}>
-              #{tag}
+            ^{cse}
         <li .nav-header>
           <i .icon-comment> #
           Recent Comments
@@ -30,12 +29,13 @@ $maybe msg <- mmsg
           <li>
             <a href="@{ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)}##{commentAnchor comment}">
               #{show $ utctDay $ commentCreatedAt comment} #{commentAuthor comment}
-        $maybe cse <- mcse
-          <li .nav-header>
-            <i .icon-search> #
-            Search
+        <li .nav-header>
+          <i .icon-tags> #
+          Tags
+        $forall tag <- tags
           <li>
-            ^{cse}
+            <a href=@{TagR tag}>
+              #{tag}
         <li .nav-header>
           Control
         $if accessible
