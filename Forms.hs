@@ -34,6 +34,7 @@ articleForm' mart mtags htm = do
   now  <- liftIO getCurrentTime
   fs <- askFiles
   let files = concat $ maybeToList (M.elems . M.filterWithKey (const . T.isPrefixOf "file") <$> fs)
+  liftIO $ print (fs, files)
   markup <- extraMarkup . appExtra . settings <$> lift getYesod
   ident <- maybe (lift newIdent) return $ articleIdent <$> mart
   let day  = utctDay now
