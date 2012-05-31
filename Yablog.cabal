@@ -123,6 +123,8 @@ executable         Yablog
                  , xml-hamlet                    >= 0.3        && < 0.4
                  , xml-conduit                   >= 0.7        && < 0.8
                  , network                       >= 2.3        && < 2.4
+                 , filepath                      >= 1.2        && < 1.3
+                 , directory                     >= 1.1        && < 1.2
 
 source-repository head
   type:     git
