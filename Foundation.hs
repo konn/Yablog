@@ -55,6 +55,8 @@ import Markups
 import Network.HTTP.Types
 import qualified Data.ByteString.Lazy.Char8 as LBS
 import Network.Socket
+import Control.Monad
+import System.IO.Unsafe
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -261,5 +263,7 @@ commentAnchor c = T.concat [ "comment-"
                            ]
 hostToString :: SockAddr -> String
 hostToString (SockAddrUnix str) = str
-hostToString (SockAddrInet _ host) = show host
-hostToString (SockAddrInet6 _ finfo host scope) = show (finfo, host, scope)
+hostToString (SockAddrInet _ host) = unsafePerformIO $ inet_ntoa host
+hostToString addr@(SockAddrInet6 _ _ _ _) = unsafePerformIO $
+                 fst `liftM` getNameInfo [NI_NUMERICHOST] True False addr >>=
+                 maybe (fail "showsPrec: impossible internal error") return
