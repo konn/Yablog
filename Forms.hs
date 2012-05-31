@@ -17,6 +17,7 @@ import Markups
 import Yesod.Default.Config
 import qualified Network.Wai as W
 import qualified Data.Text as T
+import Data.Monoid
 
 type URL = String
 articleForm :: Form (Article, [Text], [URL], Maybe FileInfo)
@@ -38,7 +39,8 @@ articleForm' mart mtags htm = do
       time = timeToTimeOfDay $ utctDayTime now
   if maybe False ((/= usrId) . articleAuthor) mart
      then lift $ permissionDenied "You cannot edit that article."
-     else flip renderBootstrap htm $
+     else do
+       (r, widget) <- flip renderBootstrap htm $
             let titleSettings = FieldSettings { fsLabel = SomeMessage MsgTitle
                                               , fsName = Just "title"
                                               , fsId = Just "title"
@@ -109,6 +111,8 @@ articleForm' mart mtags htm = do
                                               , fsAttrs = []
                                               }
             in (,,,) <$> art <*> tags <*> tbs <*> fileAFormOpt imageSettings
+       let appendFileWidget = [whamlet| <button .btn action="appendfile();">Append |]
+       return (r, widget `mappend` appendFileWidget)
 
 commentDeleteForm :: ArticleId -> Form ([Comment], Bool)
 commentDeleteForm art html = do
