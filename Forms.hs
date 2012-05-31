@@ -112,7 +112,7 @@ articleForm' mart mtags htm = do
                                               , fsAttrs = []
                                               }
             in (,,,) <$> art <*> tags <*> tbs <*> fileAFormOpt imageSettings
-       let appendFileWidget = [whamlet| <button .btn #append-file>Append |]
+       let appendFileWidget = [whamlet| <a .btn #append-file>Append |]
        return (r, widget `mappend` appendFileWidget)
 
 commentDeleteForm :: ArticleId -> Form ([Comment], Bool)
