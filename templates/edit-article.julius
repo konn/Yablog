@@ -7,5 +7,9 @@ $(document).ready(function(){
 	var title = $('#title').val()
 	$("#preview-contents").contents().find("html").load("/preview", $("#edit-form").serializeArray());
     }
+    function appendFileForm() {
+	$("#image:file:last").append("<input type=\"file\" name=\"image\" id=\"image\">")
+    }
     $('#show-preview').click(function(){ reloadPreview(); });
+    $('#append-file').click(function() { appendFileForm(); });
 });

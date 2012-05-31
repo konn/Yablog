@@ -106,12 +106,12 @@ articleForm' mart mtags htm = do
                 tbs  = maybe [] (lines . T.unpack . unTextarea) <$> aopt textareaField trackbackUrls Nothing
                 imageSettings = FieldSettings { fsLabel = SomeMessage MsgImage
                                               , fsTooltip = Nothing
-                                              , fsName = Just "image"
-                                              , fsId   = Just "image"
+                                              , fsName = Just "file01"
+                                              , fsId   = Just "file01"
                                               , fsAttrs = []
                                               }
             in (,,,) <$> art <*> tags <*> tbs <*> fileAFormOpt imageSettings
-       let appendFileWidget = [whamlet| <button .btn action="appendfile();">Append |]
+       let appendFileWidget = [whamlet| <button .btn #append-file>Append |]
        return (r, widget `mappend` appendFileWidget)
 
 commentDeleteForm :: ArticleId -> Form ([Comment], Bool)
