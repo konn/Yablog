@@ -38,7 +38,7 @@ postCreateR = do
           Left  _ -> return False
       if success
          then do
-           procAttachment mfinfo
+           procAttachment article mfinfo
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
            unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
@@ -49,13 +49,13 @@ postCreateR = do
       setMessageI MsgInvalidInput
       defaultLayout $(widgetFile "post-article")
 
-procAttachment :: Maybe FileInfo -> Handler ()
-procAttachment (Just finfo) = do
+procAttachment :: Article -> Maybe FileInfo -> Handler ()
+procAttachment article (Just finfo) = do
   renderUrl <- getUrlRender
   liftIO $ T.putStrLn $ renderUrl $
     StaticR $ StaticRoute ["imgs", T.pack $ show (YablogDay $ toEnum $ articleCreatedDate article)
                           , fileName finfo ] []
-procAttachment _ = return ()
+procAttachment _ _ = return ()
 
 
 getCreateR :: Handler RepHtml
@@ -149,7 +149,7 @@ putArticleR (YablogDay day) ident = do
           else return False
       if suc
          then do
-           procAttachment mfinfo
+           procAttachment article mfinfo
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
            unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (YablogDay day) $ articleIdent article
