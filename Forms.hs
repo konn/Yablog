@@ -109,7 +109,7 @@ articleForm' mart mtags htm = do
                                               , fsTooltip = Nothing
                                               , fsName = Nothing
                                               , fsId   = Nothing
-                                              , fsAttrs = [("class", "file")]
+                                              , fsAttrs = [("class", "file0")]
                                               }
             in (,,,) <$> art <*> tags <*> tbs <*> fileAFormOpt imageSettings
        let appendFileWidget = [whamlet| <a .btn #append-file>Append |]
