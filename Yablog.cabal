@@ -127,6 +127,8 @@ executable         Yablog
                  , directory                     >= 1.1        && < 1.2
                  , containers                    >= 0.4        && < 0.5
                  , mtl                           >= 2.0        && < 2.1
+                 , temporary                     >= 1.1        && < 1.2
+                 , resourcet                     >= 0.3        && < 0.4
 
 source-repository head
   type:     git

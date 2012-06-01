@@ -20,7 +20,10 @@ import Network.HTTP.Conduit hiding (def)
 import Network.HTTP.Types
 import qualified Network.Wai as W
 import System.Directory
+import Control.Monad.Trans.Resource
 import System.FilePath
+import System.IO.Temp
+import Network.URI
 
 postCreateR :: Handler RepHtml
 postCreateR = do
@@ -311,10 +314,30 @@ postPreviewR = do
           mnext    = Nothing
           mprev    = Nothing
       blogTitle <- getBlogTitle
-      body <- markupRender Nothing article
+      body <- markupRender' Nothing (procTemporaryFile article) article
       defaultLayout $ do
         $(widgetFile "article-view")
     _ -> notFound
+
+procTemporaryFile :: Article -> Inline -> Handler Inline
+procTemporaryFile article inl =
+  case inl of
+    Image is targ -> Image is <$> rewrite targ
+    Link  is targ -> Link  is <$> rewrite targ
+    _             -> return inl
+  where
+    rewrite (url, a)
+      | isRelativeReference url && not ("/" `isPrefixOf` url) = do
+          (_, files) <- runRequestBody
+          tmpDir <- liftIO $ createTempDirectory (attachmentDir article) "temp"
+          register $ liftIO $ removeDirectoryRecursive tmpDir
+          forM_ files $ \(param, finfo) -> when ("file" `T.isPrefixOf` param) $ do
+            liftIO $ LBS.writeFile (tmpDir </> T.unpack (fileName finfo)) $ fileContent finfo
+          let atts = map (fileName . snd) files
+          if T.pack url `elem` atts
+             then return ("/" </> tmpDir </> url, a)
+             else return ("/" </> attachmentDir article </> url, a)
+      | otherwise = return (url, a)
 
 getTagR :: Text -> Handler RepHtml
 getTagR tag = do

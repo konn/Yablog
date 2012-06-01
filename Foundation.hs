@@ -15,6 +15,7 @@ module Foundation
     , getBlogTitle
     , getBlogDescription
     , markupRender
+    , markupRender'
     , isAdmin
     , notice
     , commentAnchor
@@ -24,6 +25,7 @@ module Foundation
     ) where
 
 import Prelude
+import Data.Data
 import Yesod
 import Yesod.Static
 import Settings.StaticFiles
@@ -40,7 +42,6 @@ import qualified Settings
 import qualified Data.ByteString.Lazy as L
 import qualified Database.Persist.Store
 import Database.Persist.MongoDB hiding (master)
-import Settings (widgetFile, Extra (..))
 import Model
 import Text.Jasmine (minifym)
 import Web.ClientSession (getKey)
@@ -115,13 +116,20 @@ isAdmin usr = do
   as <- extraAdmins . appExtra . settings <$> getYesod
   return $ userIdent usr `elem` as
 
-markupRender :: Maybe String -> Article -> GHandler sub Yablog Html
-markupRender mid article = do
+markupRender' :: Data a => Maybe String
+              -> (a -> GHandler sub Yablog a)
+              -> Article
+              -> GHandler sub Yablog Html
+markupRender' mid tran article = do
   extra <- appExtra . settings <$> getYesod
   usr <- runDB $ get404 $ articleAuthor article
   let markup = fromMaybe "markdown" $ articleMarkup article <|> extraMarkup extra
-      trans  = bottomUp (procAttach article) . (maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr)
-  return $ renderMarkup mid markup trans $ articleBody article
+  let trans = bottomUpM tran . bottomUp (procAttach article)
+              . (maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr)
+  renderMarkup mid markup trans $ articleBody article
+
+markupRender :: Maybe String -> Article -> GHandler sub Yablog Html
+markupRender mid = markupRender' mid (return :: Pandoc -> GHandler sub Yablog Pandoc)
 
 dayToString :: Day -> String
 dayToString = formatTime defaultTimeLocale "%Y%m%d"

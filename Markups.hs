@@ -12,6 +12,7 @@ import Yesod hiding (insert)
 import Data.Maybe
 import Prelude
 import Data.Char
+import Control.Monad
 
 renderTwitterLink :: Pandoc -> Pandoc
 renderTwitterLink = bottomUp go
@@ -24,13 +25,14 @@ renderTwitterLink = bottomUp go
 addAmazonAssociateLink :: String -> Pandoc -> Pandoc
 addAmazonAssociateLink = bottomUp . procAmazon
 
-renderMarkup :: Maybe String
-             -> String             -- ^ markup language
-             -> (Pandoc -> Pandoc) -- ^ pandoc transformer
-             -> String             -- ^ source
-             -> Html               -- ^ Html
+renderMarkup :: Monad m
+             => Maybe String
+             -> String               -- ^ markup language
+             -> (Pandoc -> m Pandoc) -- ^ pandoc transformer
+             -> String               -- ^ source
+             -> m Html               -- ^ Html
 renderMarkup mid lang trans =
-    writeHtml opts
+    liftM (writeHtml opts)
                   . trans . renderTwitterLink
                   . fromMaybe readMarkdown (lookup (map toLower lang) readers) defaultParserState
   where
