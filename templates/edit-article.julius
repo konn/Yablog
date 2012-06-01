@@ -8,22 +8,22 @@ $(document).ready(function(){
 	var title = $('#title').val()
 	$("#preview-contents").contents().find("html").load("/preview", $("#edit-form").serializeArray());
     }
-    function addClickAction(file) {
-	file.change(function() {
-   	    $(this).upload("@{AttachR (YablogDay day) ident}",
-			   $(this).parent().serialize(),
-			   function(html){});
-	    
-	});
-    }
     function appendFileForm() {
 	filecount += 1;
 	var newForm = $("
 <form enctype=\"multipart/form-data\" action=\"@{AttachR (YablogDay day) ident}\" class=uploader><input type=file name=file #file></form>");
-        addClickAction(newForm.find(':file'));
-	newForm.insertAfter(".uploader:last")
+	newForm.insertAfter(".uploader:last");
+        newForm.find(':file').change(function() {
+   	    $(this).upload("@{AttachR (YablogDay day) ident}",
+			   $(this).parent().serialize(),
+			   function(html){});
+	});
     }
     $('#show-preview').click(function(){ reloadPreview(); });
     $('#append-file').click(function() { appendFileForm(); });
-    addClickAction($(':file'));
+    $(':file').change(function() {
+   	$(this).upload("@{AttachR (YablogDay day) ident}",
+		       $(this).parent().serialize(),
+		       function(html){});
+    });
 });
