@@ -6,11 +6,7 @@ $(document).ready(function(){
     function reloadPreview() {
 	var src = $('#src').val();
 	var title = $('#title').val()
-	var data = $("#edit-form").serializeArray()
-	jQuery.each($(':file'), function(i, file) {
-	    data.append('file'+i, file)
-	});
-	$("#preview-contents").contents().find("html").load("/preview", data);
+	$("#preview-contents").contents().find("html").load("/preview", $("#edit-form").serializeArray());
     }
     function appendFileForm() {
 	filecount += 1;
