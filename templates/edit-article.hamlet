@@ -26,8 +26,8 @@
       <iframe src=@{PreviewR} #preview-contents .span7 height="400px">
     <div .tab-pane #attachments>
       <h2>_{MsgAttachments}
-        $maybe as <- mAttachments
-          <ul>
+      $maybe as <- mAttachments
+        <ul>
           $forall path <- as
             <li>
               <a href=#{path} target=_blank>
