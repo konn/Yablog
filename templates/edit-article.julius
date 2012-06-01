@@ -10,8 +10,7 @@ $(document).ready(function(){
     }
     function appendFileForm() {
 	filecount += 1;
-	var newForm = $("
-<form enctype=\"multipart/form-data\" action=\"@{AttachR (YablogDay day) ident}\" class=uploader><input type=file name=file #file></form>");
+	var newForm = $("<form enctype=\"multipart/form-data\" action=\"@{AttachR (YablogDay day) ident}\" class=uploader><input type=file name=file #file></form>");
 	newForm.insertAfter(".uploader:last");
         newForm.find(':file').change(function() {
    	    $(this).upload("@{AttachR (YablogDay day) ident}",
