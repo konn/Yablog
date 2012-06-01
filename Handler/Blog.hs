@@ -3,14 +3,13 @@ import Data.Time
 import Import
 import Control.Monad
 import Yesod.Auth
-import Yesod.Static
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as LT
 import qualified Data.Text.Lazy.Encoding as LT
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
-import Data.List (sortBy)
+import Data.List (sortBy, isPrefixOf)
 import Data.Function
 import Text.Hamlet.XML
 import Text.XML
@@ -22,7 +21,6 @@ import Network.HTTP.Types
 import qualified Network.Wai as W
 import System.Directory
 import System.FilePath
-import System.Locale
 
 postCreateR :: Handler RepHtml
 postCreateR = do
@@ -53,12 +51,10 @@ postCreateR = do
 
 procAttachment :: Article -> [FileInfo] -> Handler ()
 procAttachment article fs = forM_ fs $ \finfo -> do
-  renderUrl <- getUrlRender
   let dir = attachmentDir article
   liftIO $ do
     createDirectoryIfMissing True dir
     LBS.writeFile (dir </> T.unpack (fileName finfo)) (fileContent finfo)
-procAttachment _ _ = return ()
 
 getCreateR :: Handler RepHtml
 getCreateR = do
@@ -135,7 +131,7 @@ pingTrackback article tb = do
 
 putArticleR :: YablogDay -> Text -> Handler RepHtml
 putArticleR (YablogDay day) ident = do
-  ((result, widget), enctype) <- runFormPost articleForm
+  ((result, _), _) <- runFormPost articleForm
   usrId <- requireAuthId
   time  <- liftIO getCurrentTime
   case result of
@@ -180,9 +176,10 @@ getModifyR (YablogDay day) ident = do
 
 articleAttachments :: Article -> Handler (Maybe [FilePath])
 articleAttachments art = liftIO $ do
-  exists <- doesDirectoryExist $ attachmentDir art
+  let dir = attachmentDir art
+  exists <- doesDirectoryExist dir
   if exists
-    then Just <$> getDirectoryContents (attachmentDir art)
+    then Just . map (dir </>) . filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
     else return Nothing
 
 
@@ -208,8 +205,8 @@ deleteArticleR (YablogDay day) ident = do
 postCommentR :: YablogDay -> Text -> Handler RepHtml
 postCommentR (YablogDay date) ident = do
   addr <- hostToString . W.remoteHost <$> waiRequest
-  ans <- runDB $ selectFirst [BannedIp ==. Just addr] []
-  when (isJust ans) $ permissionDenied "YOU ARE BANNED TO COMMENT"
+  isBanned <- isJust <$> runDB (selectFirst [BannedIp ==. Just addr] [])
+  when isBanned $ permissionDenied "YOU ARE BANNED TO COMMENT"
   Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
   ((result, _), _) <- runFormPost $ commentForm' Nothing key
   case result of
@@ -267,7 +264,7 @@ deleteCommentR (YablogDay day) ident = do
   when (uid /= articleAuthor art) $ do
     permissionDenied "You are not allowed to delete those comment(s)."
   case result of
-    FormSuccess (cs, spam) -> do
+    FormSuccess (cs, _) -> do
       when (any ((/= aid) . commentArticle) cs) $ permissionDenied "You can't delete that comment."
       runDB $ forM_ cs $ \c -> do
         deleteBy $ UniqueComment aid (commentAuthor c) (commentCreatedAt c)
@@ -346,7 +343,6 @@ getTrackbackR (YablogDay date) ident = do
     ts <- map entityVal <$> selectList [TrackbackArticle ==. aid] []
     return (art, ts)
   render <- getUrlRender
-  desc <- getBlogDescription
   bTitle <- getBlogTitle
   return $ mkXmlResponse [xml|
       <error>
