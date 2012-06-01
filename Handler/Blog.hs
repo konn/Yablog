@@ -179,7 +179,11 @@ articleAttachments art = liftIO $ do
   let dir = attachmentDir art
   exists <- doesDirectoryExist dir
   if exists
-    then Just . map (("/" </> dir) </>) . filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
+    then do
+      children <- filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
+      if null children
+        then return Nothing
+        else return $ Just $ map (("/" </> dir) </>) children
     else return Nothing
 
 getDeleteAttachmentR :: YablogDay -> Text -> FilePath -> Handler ()
