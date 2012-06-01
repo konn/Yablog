@@ -10,6 +10,7 @@
     $if isJust mAttachments
       <li>
         <a href="#attachments" data-toggle="tab" #show-attachments>
+          _{MsgAttachments}
     $maybe _ <- mCommentTrackbackForm
       <li>
         <a href="#comment-delete" data-toggle="tab" #show-comment-view>
@@ -25,12 +26,13 @@
     <div .tab-pane #preview>
       <iframe src=@{PreviewR} #preview-contents .span7 height="400px">
     $maybe as <- mAttachments
-      <h2>_{MsgAttachments}
-      <ul>
-        $forall path <- as
-          <li>
-            <a href=#{path} target=_blank>
-              #{takeFileName path}
+      <div .tab-pane #attachments>
+        <h2>_{MsgAttachments}
+        <ul>
+          $forall path <- as
+            <li>
+              <a href=#{path} target=_blank>
+                #{takeFileName path}
     $maybe (cWidget, cEnctype, tWidget, tEnctype) <- mCommentTrackbackForm
       <div .tab-pane #comment-delete>
         <form action=@{DeleteCommentR (YablogDay day) ident} method=post enctype=#{cEnctype}>
