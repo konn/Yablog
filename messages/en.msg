@@ -39,4 +39,4 @@ BanSettings: BAN Settings
 Settings: Settings
 Bans: BANs
 Image: Image
-
+Attachments: Attachments

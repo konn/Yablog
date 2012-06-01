@@ -39,3 +39,4 @@ BanSettings: BAN 設定
 Settings: 設定
 Bans: BANs
 Image: 画像
+Attachments: 添付ファイル一覧

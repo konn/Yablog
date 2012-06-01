@@ -32,3 +32,11 @@
     <div .tab-pane #delete-article>
       <form action=@{DeleteR (YablogDay day) ident} method=get enctype=#{enctype}>
         <input type=submit value=_{MsgDeleteArticle} .btn .btn-danger>
+
+$maybe as <- mAttachments
+  <h2>_{MsgAttachments}
+  <ul>
+  $forall path <- as
+    <li>
+      <a href=#{path} target=_blank>
+        #{takeFileName path}

@@ -20,9 +20,8 @@ import Data.Maybe
 import Network.HTTP.Conduit hiding (def)
 import Network.HTTP.Types
 import qualified Network.Wai as W
-import Settings
-import System.FilePath
 import System.Directory
+import System.FilePath
 import System.Locale
 
 postCreateR :: Handler RepHtml
@@ -55,9 +54,7 @@ postCreateR = do
 procAttachment :: Article -> [FileInfo] -> Handler ()
 procAttachment article fs = forM_ fs $ \finfo -> do
   renderUrl <- getUrlRender
-  let dir = staticDir </> "files"
-                      </> dayToString (toEnum $ articleCreatedDate article :: Day)
-                      </> T.unpack (articleIdent article)
+  let dir = attachmentDir article
   liftIO $ do
     createDirectoryIfMissing True dir
     LBS.writeFile (dir </> T.unpack (fileName finfo)) (fileContent finfo)
@@ -161,8 +158,7 @@ putArticleR (YablogDay day) ident = do
          else permissionDenied "You are not allowed to edit this article."
     _ -> do
       setMessageI MsgInvalidInput
-      let mCommentTrackbackForm = Nothing :: Maybe (Widget, Text, Widget, Text)
-      defaultLayout $(widgetFile "edit-article")
+      redirect $ ModifyR (YablogDay day) ident
 
 getDeleteR :: YablogDay -> Text -> Handler RepHtml
 getDeleteR = deleteArticleR 
@@ -177,9 +173,18 @@ getModifyR (YablogDay day) ident = do
   (cWidget, cEnctype) <- generateFormPost $ commentDeleteForm artId
   (tWidget, tEnctype) <- generateFormPost $ trackbackDeleteForm artId
   let mCommentTrackbackForm = Just (cWidget, cEnctype, tWidget, tEnctype)
+  mAttachments <- articleAttachments art
   defaultLayout $ do
     setTitleI $ MsgEdit $ articleTitle art
     $(widgetFile "edit-article")
+
+articleAttachments :: Article -> Handler (Maybe [FilePath])
+articleAttachments art = liftIO $ do
+  exists <- doesDirectoryExist $ attachmentDir art
+  if exists
+    then Just <$> getDirectoryContents (attachmentDir art)
+    else return Nothing
+
 
 postDeleteCommentR :: YablogDay -> Text -> Handler ()
 postDeleteCommentR = deleteCommentR

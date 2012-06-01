@@ -20,6 +20,7 @@ module Foundation
     , commentAnchor
     , dayToString
     , hostToString
+    , attachmentDir
     ) where
 
 import Prelude
@@ -48,6 +49,7 @@ import Data.List (nub, sort)
 import Data.Maybe
 import Network.Mail.Mime
 import Data.Time
+import System.FilePath hiding (joinPath)
 import System.Locale
 import Control.Applicative
 import qualified Data.Text as T
@@ -61,6 +63,7 @@ import Network.URI
 import System.IO.Unsafe
 import Text.Pandoc
 import Data.List (isPrefixOf)
+import Settings
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -122,6 +125,12 @@ markupRender mid article = do
 
 dayToString :: Day -> String
 dayToString = formatTime defaultTimeLocale "%Y%m%d"
+
+attachmentDir :: Article -> FilePath
+attachmentDir article =
+    staticDir </> "files"
+              </> dayToString (toEnum $ articleCreatedDate article :: Day)
+              </> T.unpack (articleIdent article)
 
 procAttach :: Article -> Inline -> Inline
 procAttach article inl =
