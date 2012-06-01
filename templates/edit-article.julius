@@ -8,20 +8,20 @@ $(document).ready(function(){
 	var title = $('#title').val()
 	$("#preview-contents").contents().find("html").load("/preview", $("#edit-form").serializeArray());
     }
-    function appendFileForm() {
-	filecount += 1;
-	$(".uploader").after($('uploader'));
-        $(':file:last').change(function() {
+    function addClickAction() {
+	$(':file:last').change(function() {
    	    $(this).upload("@{AttachR (YablogDay day) ident}",
 			   $(this).parent().serialize(),
 			   function(html){});
-    });
+	    
+	});
+    }
+    function appendFileForm() {
+	filecount += 1;
+	$(".uploader:last").after($('uploader'));
+	addClickAction();
     }
     $('#show-preview').click(function(){ reloadPreview(); });
     $('#append-file').click(function() { appendFileForm(); });
-    $(':file').change(function() {
-	$(this).upload("@{AttachR (YablogDay day) ident}",
-		       $(this).parent().serialize(),
-		       function(html){});
-    });
+    addClickAction();
 });
