@@ -37,7 +37,7 @@
       <h3>_{MsgAddAttachments}
       <form enctype="multipart/form-data" action=@{AttachR (YablogDay day) ident} .uploader>
         <input type=file name=file #file>
-        <a .btn #append-file>Append
+      <a .btn #append-file>Append
     $maybe (cWidget, cEnctype, tWidget, tEnctype) <- mCommentTrackbackForm
       <div .tab-pane #comment-delete>
         <form action=@{DeleteCommentR (YablogDay day) ident} method=post enctype=#{cEnctype}>
