@@ -320,24 +320,24 @@ postPreviewR = do
     _ -> notFound
 
 procTemporaryFile :: Article -> Inline -> Handler Inline
-procTemporaryFile article inl =
+procTemporaryFile article inl = do
+  (_, files) <- runRequestBody
+  tmpDir <- liftIO $ createTempDirectory (attachmentDir article) "temp"
+  register $ liftIO $ removeDirectoryRecursive tmpDir
+  forM_ files $ \(param, finfo) -> when ("file" `T.isPrefixOf` param) $ do
+    liftIO $ LBS.writeFile (tmpDir </> T.unpack (fileName finfo)) $ fileContent finfo
+  let atts = map (fileName . snd) files
+      rewrite (url, a)
+        | isRelativeReference url && not ("/" `isPrefixOf` url) =
+            if T.pack url `elem` atts
+               then ("/" </> tmpDir </> url, a)
+               else ("/" </> attachmentDir article </> url, a)
+        | otherwise = (url, a)
+  liftIO $ print atts
   case inl of
-    Image is targ -> Image is <$> rewrite targ
-    Link  is targ -> Link  is <$> rewrite targ
+    Image is targ -> return $ Image is $ rewrite targ
+    Link  is targ -> return $ Link  is $ rewrite targ
     _             -> return inl
-  where
-    rewrite (url, a)
-      | isRelativeReference url && not ("/" `isPrefixOf` url) = do
-          (_, files) <- runRequestBody
-          tmpDir <- liftIO $ createTempDirectory (attachmentDir article) "temp"
-          register $ liftIO $ removeDirectoryRecursive tmpDir
-          forM_ files $ \(param, finfo) -> when ("file" `T.isPrefixOf` param) $ do
-            liftIO $ LBS.writeFile (tmpDir </> T.unpack (fileName finfo)) $ fileContent finfo
-          let atts = map (fileName . snd) files
-          if T.pack url `elem` atts
-             then return ("/" </> tmpDir </> url, a)
-             else return ("/" </> attachmentDir article </> url, a)
-      | otherwise = return (url, a)
 
 getTagR :: Text -> Handler RepHtml
 getTagR tag = do
