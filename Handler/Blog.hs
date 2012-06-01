@@ -179,7 +179,7 @@ articleAttachments art = liftIO $ do
   let dir = attachmentDir art
   exists <- doesDirectoryExist dir
   if exists
-    then Just . map (("" </> dir) </>) . filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
+    then Just . map (("/" </> dir) </>) . filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
     else return Nothing
 
 
