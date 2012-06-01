@@ -12,6 +12,7 @@
 /article/#YablogDay/#T.Text ArticleR GET PUT DELETE
 /article/#YablogDay/#T.Text/delete DeleteR GET
 /article/#YablogDay/#T.Text/delete/#FilePath DeleteAttachmentR GET
+/article/#YablogDay/#T.Text/upload AttachR POST
 /article/#YablogDay/#T.Text/comment CommentR POST PUT DELETE
 /tag/#T.Text TagR GET
 /article/#YablogDay/#T.Text/comment/delete DeleteCommentR POST

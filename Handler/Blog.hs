@@ -29,7 +29,7 @@ postCreateR :: Handler RepHtml
 postCreateR = do
   ((result, widget), enctype) <- runFormPost articleForm
   case result of
-    FormSuccess (article, tags, tbs, mfinfo) -> do
+    FormSuccess (article, tags, tbs) -> do
       usr <- requireAuthId
       when (articleAuthor article /= usr) $ redirect RootR
       success <- runDB $ do
@@ -41,7 +41,6 @@ postCreateR = do
           Left  _ -> return False
       if success
          then do
-           procAttachment article mfinfo
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
            unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (toEnum $ articleCreatedDate article) (articleIdent article)
@@ -52,13 +51,6 @@ postCreateR = do
       setMessageI MsgInvalidInput
       defaultLayout $(widgetFile "post-article")
 
-procAttachment :: Article -> [FileInfo] -> Handler ()
-procAttachment article fs = forM_ fs $ \finfo -> do
-  let dir = attachmentDir article
-  liftIO $ do
-    createDirectoryIfMissing True dir
-    LBS.writeFile (dir </> T.unpack (fileName finfo)) (fileContent finfo)
-
 getCreateR :: Handler RepHtml
 getCreateR = do
   (widget, enctype) <- generateFormPost articleForm
@@ -66,10 +58,11 @@ getCreateR = do
     $(widgetFile "post-article")
 
 getArticleR :: YablogDay -> Text -> Handler RepHtml
-getArticleR (YablogDay date) ident = do
+getArticleR = withArticle $ \(Entity key article) -> do
+  let date = toEnum $ articleCreatedDate article
+      ident = articleIdent article
   musr <- maybeAuthId
-  (article, comments, trackbacks, mprev, mnext) <- runDB $ do
-    Entity key article <- getBy404 (UniqueArticle (fromEnum date) ident)
+  (comments, trackbacks, mprev, mnext) <- runDB $ do
     cs <- map entityVal <$> selectList [CommentArticle ==. key] []
     ts <- map entityVal <$> selectList [TrackbackArticle ==. key] []
     mnext <- selectFirst [ ArticleCreatedDate >=. articleCreatedDate article
@@ -84,7 +77,7 @@ getArticleR (YablogDay date) ident = do
                                     ]
                          ]
                          [ Desc ArticleCreatedDate, Desc ArticleCreatedTime ]
-    return (article, cs, ts, entityVal <$> mprev, entityVal <$> mnext)
+    return (cs, ts, entityVal <$> mprev, entityVal <$> mnext)
   (cWidget, cEnctype) <- generateFormPost $ commentForm Nothing article
   let mCommentForm = Just (cWidget, cEnctype)
   blogTitle <- getBlogTitle
@@ -138,7 +131,7 @@ putArticleR (YablogDay day) ident = do
   usrId <- requireAuthId
   time  <- liftIO getCurrentTime
   case result of
-    FormSuccess (article, tags, tbs, mfinfo) -> do
+    FormSuccess (article, tags, tbs) -> do
       suc <- runDB $ do
         Entity key old <- getBy404 $ UniqueArticle (fromEnum day) ident
         if articleAuthor old == usrId
@@ -150,7 +143,6 @@ putArticleR (YablogDay day) ident = do
           else return False
       if suc
          then do
-           procAttachment article mfinfo
            errs <- catMaybes <$> mapM (pingTrackback article) tbs
            unless (null errs) $ setMessageI $ T.unlines errs
            redirect $ ArticleR (YablogDay day) $ articleIdent article
@@ -163,18 +155,18 @@ getDeleteR :: YablogDay -> Text -> Handler RepHtml
 getDeleteR = deleteArticleR 
 
 getModifyR :: YablogDay -> Text -> Handler RepHtml
-getModifyR (YablogDay day) ident = do
-  (artId, art, tags) <- runDB $ do
-    Entity key art <- getBy404 $ UniqueArticle (fromEnum day) ident
-    tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
-    return (key, art, tags)
+getModifyR = withArticleAuth $ \(Entity artId art) -> do
+  tags <- runDB $ map (tagName . entityVal) <$> selectList [TagArticle ==. artId] []
   (widget, enctype) <- generateFormPost $ articleForm' (Just art) (Just tags)
   (cWidget, cEnctype) <- generateFormPost $ commentDeleteForm artId
   (tWidget, tEnctype) <- generateFormPost $ trackbackDeleteForm artId
   let mCommentTrackbackForm = Just (cWidget, cEnctype, tWidget, tEnctype)
+      day   = toEnum $ articleCreatedDate art
+      ident = articleIdent art
   mAttachments <- articleAttachments art
   defaultLayout $ do
     setTitleI $ MsgEdit $ articleTitle art
+    addScript $ StaticR js_jquery_upload_1_0_2_min_js
     $(widgetFile "edit-article")
 
 articleAttachments :: Article -> Handler (Maybe [FilePath])
@@ -190,21 +182,18 @@ articleAttachments art = liftIO $ do
     else return Nothing
 
 getDeleteAttachmentR :: YablogDay -> Text -> FilePath -> Handler ()
-getDeleteAttachmentR (YablogDay day) ident fp = do
-  usr <- requireAuthId
-  (artId, art, tags) <- runDB $ do
-    Entity key art <- getBy404 $ UniqueArticle (fromEnum day) ident
-    tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
-    return (key, art, tags)
-  when (articleAuthor art /= usr) $
-    permissionDenied "You are not an author of this article."
-  exc <- liftIO $ doesFileExist $ attachmentDir art </> fp
-  unless exc $ do
-    setMessageI $ MsgAttachmentNotFound fp
-    redirect $ ModifyR (YablogDay day) ident
-  liftIO $ removeFile $ attachmentDir art </> fp
-  render <- getUrlRender
-  redirect $ render (ModifyR (YablogDay day) ident) `T.append` "#attachments"
+getDeleteAttachmentR d@(YablogDay day) ident fp = withArticleAuth act d ident
+  where
+    act (Entity artId art) = do
+      usr <- requireAuthId
+      tags <- runDB $ map (tagName . entityVal) <$> selectList [TagArticle ==. artId] []
+      exc <- liftIO $ doesFileExist $ attachmentDir art </> fp
+      unless exc $ do
+        setMessageI $ MsgAttachmentNotFound fp
+        redirect $ ModifyR (YablogDay day) ident
+      liftIO $ removeFile $ attachmentDir art </> fp
+      render <- getUrlRender
+      redirect $ render (ModifyR (YablogDay day) ident) `T.append` "#attachments"
 
 postDeleteCommentR :: YablogDay -> Text -> Handler ()
 postDeleteCommentR = deleteCommentR
@@ -213,24 +202,17 @@ postModifyR :: YablogDay -> Text -> Handler RepHtml
 postModifyR = putArticleR
 
 deleteArticleR :: YablogDay -> Text -> Handler RepHtml
-deleteArticleR (YablogDay day) ident = do
-  usrId  <- requireAuthId
-  Entity key art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) ident
-  if articleAuthor art == usrId
-    then do
-      runDB $ do
-        mapM_ (delete . entityKey) =<< selectList [TagArticle ==. key] []
-        delete key
-      redirect RootR
-    else do
-      permissionDenied "You are not allowed to delete that article."
+deleteArticleR = withArticleAuth $ \(Entity key _) -> do
+  runDB $ do
+    mapM_ (delete . entityKey) =<< selectList [TagArticle ==. key] []
+    delete key
+  redirect RootR
 
 postCommentR :: YablogDay -> Text -> Handler RepHtml
-postCommentR (YablogDay date) ident = do
+postCommentR = withArticle $ \(Entity key article) -> do
   addr <- hostToString . W.remoteHost <$> waiRequest
   isBanned <- isJust <$> runDB (selectFirst [BannedIp ==. Just addr] [])
   when isBanned $ permissionDenied "YOU ARE BANNED TO COMMENT"
-  Entity key article <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
   ((result, _), _) <- runFormPost $ commentForm' Nothing key
   case result of
     FormSuccess comment -> do
@@ -261,7 +243,9 @@ putCommentR :: YablogDay -> Text -> Handler ()
 putCommentR = undefined
 
 deleteTrackbackR :: YablogDay -> Text -> Handler ()
-deleteTrackbackR (YablogDay day) ident = do
+deleteTrackbackR = withArticleAuth $ \(Entity aid art) -> do
+  let day = toEnum $ articleCreatedDate art
+      ident = articleIdent art
   Entity uid _ <- requireAuth
   Entity aid art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) ident
   ((result, _), _) <- runFormPost $ trackbackDeleteForm aid
@@ -280,12 +264,9 @@ postDeleteTrackbackR :: YablogDay -> Text -> Handler ()
 postDeleteTrackbackR = deleteTrackbackR
 
 deleteCommentR :: YablogDay -> Text -> Handler ()
-deleteCommentR (YablogDay day) ident = do
-  Entity uid _ <- requireAuth
-  Entity aid art <- runDB $ getBy404 $ UniqueArticle (fromEnum day) ident
+deleteCommentR = withArticleAuth $ \(Entity aid art) -> do
+  let day = toEnum $ articleCreatedDate art
   ((result, _), _) <- runFormPost $ commentDeleteForm aid
-  when (uid /= articleAuthor art) $ do
-    permissionDenied "You are not allowed to delete those comment(s)."
   case result of
     FormSuccess (cs, _) -> do
       when (any ((/= aid) . commentArticle) cs) $ permissionDenied "You can't delete that comment."
@@ -297,12 +278,23 @@ deleteCommentR (YablogDay day) ident = do
       setMessageI MsgInvalidInput
       redirect $ ModifyR (YablogDay day) (articleIdent art)
 
+postAttachR :: YablogDay -> Text -> Handler ()
+postAttachR = withArticleAuth $ \(Entity _ article) -> do
+  (_, files) <- runRequestBody
+  case lookup "file" files of
+    Just finfo -> do
+      let dir = attachmentDir article
+      liftIO $ do
+        createDirectoryIfMissing True dir
+        LBS.writeFile (dir </> T.unpack (fileName finfo)) (fileContent finfo)
+    Nothing -> notFound
+
 postPreviewR :: Handler RepHtml
 postPreviewR = do
   author <- userScreenName . entityVal <$> requireAuth
   ((result, _), _) <- runFormPost articleForm
   case result of
-    FormSuccess (article, tags, tbs, mfinfo) -> do
+    FormSuccess (article, tags, tbs) -> do
       let editable = False
           comments = []
           mCommentTrackbackForm = Nothing :: Maybe (Widget, Text, Widget, Text)
@@ -314,30 +306,10 @@ postPreviewR = do
           mnext    = Nothing
           mprev    = Nothing
       blogTitle <- getBlogTitle
-      body <- markupRender' Nothing (procTemporaryFile article) article
+      body <- markupRender Nothing article
       defaultLayout $ do
         $(widgetFile "article-view")
     _ -> notFound
-
-procTemporaryFile :: Article -> Inline -> Handler Inline
-procTemporaryFile article inl = do
-  (_, files) <- runRequestBody
-  tmpDir <- liftIO $ createTempDirectory (attachmentDir article) "temp"
-  register $ liftIO $ removeDirectoryRecursive tmpDir
-  forM_ files $ \(param, finfo) -> when ("file" `T.isPrefixOf` param) $ do
-    liftIO $ LBS.writeFile (tmpDir </> T.unpack (fileName finfo)) $ fileContent finfo
-  let atts = map (fileName . snd) files
-      rewrite (url, a)
-        | isRelativeReference url && not ("/" `isPrefixOf` url) =
-            if T.pack url `elem` atts
-               then ("/" </> tmpDir </> url, a)
-               else ("/" </> attachmentDir article </> url, a)
-        | otherwise = (url, a)
-  liftIO $ print atts
-  case inl of
-    Image is targ -> return $ Image is $ rewrite targ
-    Link  is targ -> return $ Link  is $ rewrite targ
-    _             -> return inl
 
 getTagR :: Text -> Handler RepHtml
 getTagR tag = do
@@ -349,8 +321,9 @@ getTagR tag = do
     $(widgetFile "tag")
 
 postTrackbackR :: YablogDay -> Text -> Handler RepXml
-postTrackbackR (YablogDay date) ident = do
-  Entity aid _ <- runDB $ getBy404 $ UniqueArticle (fromEnum date) ident
+postTrackbackR = withArticle $ \(Entity aid article) -> do
+  let date = toEnum $ articleCreatedDate article
+      ident = articleIdent article
   trackback <- runInputPost $
     Trackback aid <$> iopt textField "title"
                   <*> (liftM unTextarea <$> iopt textareaField "excerpt")

@@ -39,5 +39,6 @@ BanSettings: BAN 設定
 Settings: 設定
 Bans: BANs
 Image: 画像
-Attachments: 添付ファイル一覧
+Attachments: 添付ファイル
 AttachmentNotFound fp@FilePath: 添付ファイルが見付かりませんでした: #{fp}
+AddAttachments: 添付ファイルの追加

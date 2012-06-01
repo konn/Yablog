@@ -5,12 +5,11 @@
       <a href="#editor" data-toggle="tab">
         _{MsgEditOn}
     <li>
+      <a href="#attachments" data-toggle="tab" #show-attachments>
+        _{MsgAttachments}
+    <li>
       <a href="#preview" data-toggle="tab" #show-preview>
         _{MsgPreview}
-    $if isJust mAttachments
-      <li>
-        <a href="#attachments" data-toggle="tab" #show-attachments>
-          _{MsgAttachments}
     $maybe _ <- mCommentTrackbackForm
       <li>
         <a href="#comment-delete" data-toggle="tab" #show-comment-view>
@@ -25,16 +24,20 @@
         <input type=submit .btn>
     <div .tab-pane #preview>
       <iframe src=@{PreviewR} #preview-contents .span7 height="400px">
-    $maybe as <- mAttachments
-      <div .tab-pane #attachments>
-        <ul>
+    <div .tab-pane #attachments>
+      <h2>_{MsgAttachments}
+        $maybe as <- mAttachments
+          <ul>
           $forall path <- as
             <li>
               <a href=#{path} target=_blank>
                 #{takeFileName path}
               \ - 
-              <a href=@{DeleteAttachmentR (YablogDay day) ident (takeFileName path)} .btn>
-                _{MsgDelete}
+              <a href=@{DeleteAttachmentR (YablogDay day) ident (takeFileName path)} .btn>_{MsgDelete}
+      <h3>_{MsgAddAttachments}
+      <form enctype="multipart/form-data" action=@{AttachR (YablogDay day) ident} .uploader>
+        <input type=file name=file #file>
+        <a .btn #append-file>Append
     $maybe (cWidget, cEnctype, tWidget, tEnctype) <- mCommentTrackbackForm
       <div .tab-pane #comment-delete>
         <form action=@{DeleteCommentR (YablogDay day) ident} method=post enctype=#{cEnctype}>
@@ -46,5 +49,3 @@
     <div .tab-pane #delete-article>
       <form action=@{DeleteR (YablogDay day) ident} method=get enctype=#{enctype}>
         <input type=submit value=_{MsgDeleteArticle} .btn .btn-danger>
-
-$maybe as <- mAttachments

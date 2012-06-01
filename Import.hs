@@ -11,6 +11,8 @@ module Import
     , articleView
     , articleLink
     , makeBrief
+    , withArticle
+    , withArticleAuth
     , makeSnippet
 #if __GLASGOW_HASKELL__ < 740
     , (<>)
@@ -30,6 +32,7 @@ import Yesod.Auth
 import Data.Time
 import Forms
 import Data.Maybe
+import Control.Monad
 
 articleView :: Maybe String -> Article -> Widget
 articleView mid article = do
@@ -79,6 +82,17 @@ makeBrief art@Article{articleBody=body} = art {articleBody = truncated}
     isPara _        = False
     isHead (Header _ _) = True
     isHead _          = False
+
+withArticle :: (Entity Article -> Handler a) -> YablogDay -> Text -> Handler a
+withArticle act (YablogDay day) ident = do
+  act =<< runDB (getBy404 $ UniqueArticle (fromEnum day) ident)
+
+withArticleAuth :: (Entity Article -> Handler a) -> YablogDay -> Text -> Handler a
+withArticleAuth act = withArticle $ \ent@(Entity _ art) -> do
+  Entity uid _ <- requireAuth
+  when (uid /= articleAuthor art) $ do
+    permissionDenied "You are not allowed to delete those comment(s)."
+  act ent
  
 #if __GLASGOW_HASKELL__ < 740
 infixr 5 <>

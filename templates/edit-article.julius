@@ -10,8 +10,13 @@ $(document).ready(function(){
     }
     function appendFileForm() {
 	filecount += 1;
-	$(":file:last").after("<br /><input type=\"file\" name=\"file" + filecount + "\" id=\"file"+filecount+"\">")
+	$(".uploader:last").after("<br /><input type=\"file\" name=\"file" + filecount + "\" id=\"file"+filecount+"\">")
     }
     $('#show-preview').click(function(){ reloadPreview(); });
     $('#append-file').click(function() { appendFileForm(); });
+    $(':file').change(function() {
+	$(this).upload("@{AttachR (YablogDay day) ident}",
+		       $(this).parent().serialize(),
+		       function(html){});
+    });
 });

@@ -23,10 +23,10 @@ import Control.Monad.Writer.Class
 import Control.Monad.RWS ()
 
 type URL = String
-articleForm :: Form (Article, [Text], [URL], [FileInfo])
+articleForm :: Form (Article, [Text], [URL])
 articleForm = articleForm' Nothing Nothing
 
-articleForm' :: Maybe Article -> Maybe [Text] -> Form (Article, [Text], [URL], [FileInfo])
+articleForm' :: Maybe Article -> Maybe [Text] -> Form (Article, [Text], [URL])
 articleForm' mart mtags htm = do
   Entity usrId usr <- lift requireAuth
   lift $ do
@@ -36,7 +36,6 @@ articleForm' mart mtags htm = do
   now  <- liftIO getCurrentTime
   fs <- askFiles
   let files = concat $ maybeToList (M.elems . M.filterWithKey (const . T.isPrefixOf "file") <$> fs)
-  tell Multipart
   markup <- extraMarkup . appExtra . settings <$> lift getYesod
   ident <- maybe (lift newIdent) return $ articleIdent <$> mart
   let day  = utctDay now
@@ -108,14 +107,8 @@ articleForm' mart mtags htm = do
                               <*> pure (articleModifiedAt =<< mart)
                 tags = T.words . fromMaybe "" <$> aopt textField tagsSettings (Just . T.unwords <$> mtags)
                 tbs  = maybe [] (lines . T.unpack . unTextarea) <$> aopt textareaField trackbackUrls Nothing
-            in (,,,) <$> art <*> tags <*> tbs <*> pure files
-       let appendFileWidget =
-               [whamlet|
-                  <input type=file #file0 name=file0>
-                  <a .btn #append-file>Append
-                  <br>
-               |]
-       return (r, widget `mappend` appendFileWidget)
+            in (,,) <$> art <*> tags <*> tbs
+       return (r, widget)
 
 commentDeleteForm :: ArticleId -> Form ([Comment], Bool)
 commentDeleteForm art html = do
