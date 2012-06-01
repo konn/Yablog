@@ -182,6 +182,22 @@ articleAttachments art = liftIO $ do
     then Just . map (("/" </> dir) </>) . filter (not . ("." `isPrefixOf`)) <$> getDirectoryContents dir
     else return Nothing
 
+getDeleteAttachmentR :: YablogDay -> Text -> FilePath -> Handler ()
+getDeleteAttachmentR (YablogDay day) ident fp = do
+  usr <- requireAuthId
+  (artId, art, tags) <- runDB $ do
+    Entity key art <- getBy404 $ UniqueArticle (fromEnum day) ident
+    tags <- map (tagName . entityVal) <$> selectList [TagArticle ==. key] []
+    return (key, art, tags)
+  when (articleAuthor art /= usr) $
+    permissionDenied "You are not an author of this article."
+  exc <- liftIO $ doesFileExist $ attachmentDir art </> fp
+  unless exc $ do
+    setMessageI $ MsgAttachmentNotFound fp
+    redirect $ ModifyR (YablogDay day) ident
+  liftIO $ removeFile $ attachmentDir art </> fp
+  render <- getUrlRender
+  redirect $ render (ModifyR (YablogDay day) ident) `T.append` "#attachments"
 
 postDeleteCommentR :: YablogDay -> Text -> Handler ()
 postDeleteCommentR = deleteCommentR

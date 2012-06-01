@@ -40,3 +40,4 @@ Settings: 設定
 Bans: BANs
 Image: 画像
 Attachments: 添付ファイル一覧
+AttachmentNotFound fp@FilePath: 添付ファイルが見付かりませんでした: #{fp}

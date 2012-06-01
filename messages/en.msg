@@ -40,3 +40,4 @@ Settings: Settings
 Bans: BANs
 Image: Image
 Attachments: Attachments
+AttachmentNotFound fp@FilePath: Attachment file not found: #{fp}
