@@ -268,11 +268,11 @@ deleteCommentR = withArticleAuth $ \(Entity aid art) -> do
   let day = toEnum $ articleCreatedDate art
   ((result, _), _) <- runFormPost $ commentDeleteForm aid
   case result of
-    FormSuccess (cs, _) -> do
+    FormSuccess (cs, ban) -> do
       when (any ((/= aid) . commentArticle) cs) $ permissionDenied "You can't delete that comment."
       runDB $ forM_ cs $ \c -> do
         deleteBy $ UniqueComment aid (commentAuthor c) (commentCreatedAt c)
-        insert $ Banned (Just $ commentIpAddress c) Nothing
+        when ban $ void $ insert $ Banned (Just $ commentIpAddress c) Nothing
       redirect $ ArticleR (YablogDay day) (articleIdent art)
     _ -> do
       setMessageI MsgInvalidInput
