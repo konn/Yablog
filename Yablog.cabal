@@ -116,17 +116,17 @@ executable         Yablog
                  , wai                           >= 1.2        && < 1.3
                  , yaml                          >= 0.7        && < 0.8
                  , http-conduit                  >= 1.4        && < 1.5
-                 , time                          >= 1.2        && < 1.3
+                 , time                          >= 1.2        && < 1.5
                  , old-locale                    >= 1.0        && < 1.1
                  , pandoc                        >= 1.9        && < 1.10
                  , pandoc-types                  >= 1.9        && < 2.0
                  , xml-hamlet                    >= 0.3        && < 0.4
                  , xml-conduit                   >= 0.7        && < 0.8
                  , network                       >= 2.3        && < 2.4
-                 , filepath                      >= 1.2        && < 1.3
+                 , filepath                      >= 1.2        && < 1.4
                  , directory                     >= 1.1        && < 1.2
                  , containers                    >= 0.4        && < 0.5
-                 , mtl                           >= 2.0        && < 2.1
+                 , mtl                           >= 2.0        && < 2.2
                  , temporary                     >= 1.1        && < 1.2
                  , resourcet                     >= 0.3        && < 0.4
 
