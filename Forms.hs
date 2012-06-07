@@ -150,7 +150,7 @@ trackbackDeleteForm art html = do
 
 commentForm' :: Maybe Comment -> ArticleId -> Form Comment
 commentForm' mcom art html = do
-  ipaddr <- hostToString . W.remoteHost <$> lift waiRequest
+  ipaddr <- lift getIPAddrProxy
   musr <- lift  maybeAuth
   time <- liftIO getCurrentTime
   let commentField = FieldSettings { fsLabel = SomeMessage MsgComment

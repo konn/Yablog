@@ -210,7 +210,7 @@ deleteArticleR = withArticleAuth $ \(Entity key _) -> do
 
 postCommentR :: YablogDay -> Text -> Handler RepHtml
 postCommentR = withArticle $ \(Entity key article) -> do
-  addr <- hostToString . W.remoteHost <$> waiRequest
+  addr <- getIPAddrProxy
   isBanned <- isJust <$> runDB (selectFirst [BannedIp ==. Just addr] [])
   when isBanned $ permissionDenied "YOU ARE BANNED TO COMMENT"
   ((result, _), _) <- runFormPost $ commentForm' Nothing key

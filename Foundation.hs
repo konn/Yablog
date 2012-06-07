@@ -22,12 +22,14 @@ module Foundation
     , dayToString
     , hostToString
     , attachmentDir
+    , getIPAddrProxy
     ) where
 
 import Prelude
 import Data.Data
 import Yesod
 import Yesod.Static
+import qualified Network.Wai as W
 import Settings.StaticFiles
 import Yesod.RssFeed
 import Yesod.AtomFeed
@@ -308,3 +310,11 @@ hostToString (SockAddrInet _ host) = unsafePerformIO $ inet_ntoa host
 hostToString addr@(SockAddrInet6 _ _ _ _) = unsafePerformIO $
                  fst `liftM` getNameInfo [NI_NUMERICHOST] True False addr >>=
                  maybe (fail "showsPrec: impossible internal error") return
+
+getIPAddrProxy :: GHandler sub Yablog String
+getIPAddrProxy = do
+  waiReq <- waiRequest
+  let addr = maybe (hostToString $ W.remoteHost waiReq) (T.unpack . T.decodeUtf8) $
+               lookup "X-Forwarded-For" (W.requestHeaders waiReq)
+
+  return addr
