@@ -10,13 +10,8 @@ import Yesod.Auth
 import Yesod.Default.Config
 import Yesod.Default.Main
 import Yesod.Default.Handlers
-#if DEVELOPMENT
-import Yesod.Logger (Logger, logBS)
-import Network.Wai.Middleware.RequestLogger (logCallbackDev)
-#else
-import Yesod.Logger (Logger, logBS, toProduction)
-import Network.Wai.Middleware.RequestLogger (logCallback)
-#endif
+import Settings.Development
+import Network.Wai.Middleware.RequestLogger (logStdoutDev, logStdout)
 import qualified Database.Persist.Store
 import Network.HTTP.Conduit (newManager, def)
 
@@ -34,25 +29,23 @@ mkYesodDispatch "Yablog" resourcesYablog
 -- performs initialization and creates a WAI application. This is also the
 -- place to put your migrate statements to have automatic database
 -- migrations handled by Yesod.
-getApplication :: AppConfig DefaultEnv Extra -> Logger -> IO Application
-getApplication conf logger = do
+getApplication :: AppConfig DefaultEnv Extra -> IO Application
+getApplication conf = do
+    foundation <- makeFoundation conf
+    app <- toWaiAppPlain foundation
+    return $ logWare app
+  where
+    logWare   = if development then logStdoutDev
+                               else logStdout
+makeFoundation :: AppConfig DefaultEnv Extra -> IO Yablog
+makeFoundation conf = do
     manager <- newManager def
     s <- staticSite
     dbconf <- withYamlEnvironment "config/mongoDB.yml" (appEnv conf)
               Database.Persist.Store.loadConfig >>=
               Database.Persist.Store.applyEnv
     p <- Database.Persist.Store.createPoolConfig (dbconf :: Settings.PersistConfig)
-    let foundation = Yablog conf setLogger s p manager dbconf
-    app <- toWaiAppPlain foundation
-    return $ logWare app
-  where
-#ifdef DEVELOPMENT
-    logWare = logCallbackDev (logBS setLogger)
-    setLogger = logger
-#else
-    setLogger = toProduction logger -- by default the logger is set for development
-    logWare = logCallback (logBS setLogger)
-#endif
+    return $ Yablog conf s p manager dbconf
 
 -- for yesod devel
 getApplicationDev :: IO (Int, Application)

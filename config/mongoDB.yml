@@ -3,8 +3,8 @@ Default: &defaults
   password: Yablog
   host: localhost
   port: 27017
+  connections: 5
   database: Yablog
-  poolsize: 10
 
 Development:
   <<: *defaults

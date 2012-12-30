@@ -12,15 +12,18 @@ module Settings
     , parseExtra
     ) where
 
+import Text.Hamlet
+import Data.Default (def)
 import Prelude
 import Text.Shakespeare.Text (st)
 import Language.Haskell.TH.Syntax
 import Database.Persist.MongoDB (MongoConf)
 import Yesod.Default.Config
-import qualified Yesod.Default.Util
+import Yesod.Default.Util
 import Data.Text (Text)
 import Data.Yaml
 import Control.Applicative
+import Settings.Development
 
 -- | Which Persistent backend this site is using.
 type PersistConfig = MongoConf
@@ -48,16 +51,23 @@ staticDir = "static"
 staticRoot :: AppConfig DefaultEnv x -> Text
 staticRoot conf = [st|#{appRoot conf}/static|]
 
+-- | Settings for 'widgetFile', such as which template languages to support and
+-- default Hamlet settings.
+widgetFileSettings :: WidgetFileSettings
+widgetFileSettings = def
+    { wfsHamletSettings = defaultHamletSettings
+        { hamletNewlines = AlwaysNewlines
+        }
+    }
+
 
 -- The rest of this file contains settings which rarely need changing by a
 -- user.
 
 widgetFile :: String -> Q Exp
-#if DEVELOPMENT
-widgetFile = Yesod.Default.Util.widgetFileReload
-#else
-widgetFile = Yesod.Default.Util.widgetFileNoReload
-#endif
+widgetFile = (if development then widgetFileReload
+                             else widgetFileNoReload)
+              widgetFileSettings
 
 data Extra = Extra
     { extraCopyright   :: Text
@@ -69,6 +79,7 @@ data Extra = Extra
     , extraMarkup      :: Maybe String
     , extraMailAddress :: Maybe Text
     , extraGoogleCSE   :: Maybe Text
+    , extraReCAPTCHA   :: Maybe (Text, Text)
     } deriving Show
 
 parseExtra :: DefaultEnv -> Object -> Parser Extra
@@ -82,3 +93,5 @@ parseExtra _ o = Extra
     <*> o .:? "markup"
     <*> o .:? "admin-mail"
     <*> o .:? "google-cse"
+    <*> (liftA2 (,) <$> o .:? "recaptcha-public-key"
+                    <*> o .:? "recaptcha-private-key")

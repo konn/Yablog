@@ -21,6 +21,7 @@ import Data.Monoid
 import qualified Data.Map as M
 import Control.Monad.Writer.Class
 import Control.Monad.RWS ()
+import Yesod.ReCAPTCHA
 
 type URL = String
 articleForm :: Form (Article, [Text], [URL])
@@ -150,6 +151,7 @@ trackbackDeleteForm art html = do
 
 commentForm' :: Maybe Comment -> ArticleId -> Form Comment
 commentForm' mcom art html = do
+  mRecap <- lift $ extraReCAPTCHA . appExtra . settings <$> getYesod
   ipaddr <- lift getIPAddrProxy
   musr <- lift  maybeAuth
   time <- liftIO getCurrentTime
@@ -165,6 +167,7 @@ commentForm' mcom art html = do
                                    , fsName  = Just "comment-author"
                                    , fsTooltip = Nothing
                                    }
+      recap = if isJust mRecap then recaptchaAForm else pure ()
   flip renderBootstrap html $
     Comment <$> areq textField nameField (userScreenName . entityVal <$> musr)
             <*> (unTextarea <$> areq textareaField commentField (Textarea . commentBody <$> mcom))
@@ -172,6 +175,9 @@ commentForm' mcom art html = do
             <*> pure time
             <*> pure art
             <*> pure ipaddr
+            <*  recap
+            
+
 
 commentForm :: Maybe Comment -> Article -> Form Comment
 commentForm mcom art html = do

@@ -1,13 +1,24 @@
 Default: &defaults
-  host: "localhost"
+  host: "*4"
   port: 3000
-  copyright: (C) Hiromi ISHII 2011, All rights reserved.
-  title: "Insert Blog Title Here"
+  approot: "http://localhost:3000"
+  copyright: Insert copyright here
+  title: "My Great Blog"
   admins: ["Users", "Who", "Can", "Post", "Articles"]
-  description: "Tiny Blog"
-  #analytics: UA-YOURCODE
+  # specify users' idents who can write articles.
+  # For example, for Gmail or BrowserId, email-address must be used.
+  description: "This is my tiny little blog."
+  # analytics: PUT-UA-CODEHERE
+  # amazon-associate: amazon-associate-code
+  markup: markdown # default markup language
+  #hatenastar: "" # hatenastar-id
+  admin-mail: "email@example.com" # admin mail
+  # google-cse: "" # ids for google cse
+  # recaptcha-public-key: "" # recaptcha public key
+  # recaptcha-private-key: "" # recaptcha private key
 
 Development:
+  port: 3000
   <<: *defaults
 
 Testing:

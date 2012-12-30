@@ -11,6 +11,9 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
 import Data.List (sortBy, isPrefixOf)
 import Data.Function
+import qualified Data.Map as M
+import qualified Data.Conduit.Binary as BC
+import Data.Conduit
 import Text.Hamlet.XML
 import Text.XML
 import Text.XML.Cursor
@@ -286,7 +289,7 @@ postAttachR = withArticleAuth $ \(Entity _ article) -> do
       let dir = attachmentDir article
       liftIO $ do
         createDirectoryIfMissing True dir
-        LBS.writeFile (dir </> T.unpack (fileName finfo)) (fileContent finfo)
+      lift $ fileSource finfo $$ BC.sinkFile (dir </> T.unpack (fileName finfo))
     Nothing -> notFound
 
 postPreviewR :: Handler RepHtml
@@ -390,4 +393,4 @@ mkXmlResponse nodes = RepXml $
                      Document (Prologue [] Nothing []) body [])
                  Nothing
   where
-    body = Element "response" [] nodes
+    body = Element "response" M.empty nodes

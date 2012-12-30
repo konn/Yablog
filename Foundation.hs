@@ -28,17 +28,19 @@ module Foundation
 import Prelude
 import Data.Data
 import Yesod
+import Data.Default (def)
 import Yesod.Static
 import qualified Network.Wai as W
 import Settings.StaticFiles
+import Settings.Development
 import Yesod.RssFeed
 import Yesod.AtomFeed
 import Yesod.Auth
 import Yesod.Auth.BrowserId
 import Yesod.Auth.GoogleEmail
 import Yesod.Default.Config
+import Yesod.ReCAPTCHA
 import Yesod.Default.Util (addStaticContentExternal)
-import Yesod.Logger (Logger, logMsg, formatLogText)
 import Network.HTTP.Conduit (Manager)
 import qualified Settings
 import qualified Data.ByteString.Lazy as L
@@ -74,7 +76,6 @@ import Settings
 -- access to the data present here.
 data Yablog = Yablog
     { settings :: AppConfig DefaultEnv Extra
-    , getLogger :: Logger
     , getStatic :: Static -- ^ Settings for static file serving.
     , connPool :: Database.Persist.Store.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
     , httpManager :: Manager
@@ -199,6 +200,7 @@ instance Yesod Yablog where
             addStylesheet $ StaticR css_bootstrap_responsive_css
             addStylesheet $ StaticR css_bootstrap_css
             setTitle $ toHtml blogTitle
+            recaptchaOptions def { theme = Just "clean" }
             $(widgetFile "normalize")
             $(widgetFile "default-layout")
         hamletToRepHtml $(hamletFile "templates/default-layout-wrapper.hamlet")
@@ -212,9 +214,6 @@ instance Yesod Yablog where
     -- The page to be redirected to when authentication is required.
     authRoute _ = Just $ AuthR LoginR
 
-    messageLogger y loc level msg =
-      formatLogText (getLogger y) loc level msg >>= logMsg (getLogger y)
-
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows
     -- expiration dates to be set far in the future without worry of
@@ -223,6 +222,8 @@ instance Yesod Yablog where
 
     -- Place Javascript at bottom of the body tag so the rest of the page loads first
     jsLoader _ = BottomOfBody
+    shouldLog _ _source level =
+        development || level == LevelWarn || level == LevelError
 
 -- How to run database actions.
 instance YesodPersist Yablog where
@@ -258,6 +259,17 @@ instance YesodAuth Yablog where
 -- Sends off your mail. Requires sendmail in production!
 deliver :: Yablog -> L.ByteString -> IO ()
 deliver _ = sendmail
+
+instance YesodReCAPTCHA Yablog where
+  recaptchaPublicKey  = getReCAPTCHA fst
+  recaptchaPrivateKey = getReCAPTCHA snd
+
+getReCAPTCHA :: ((T.Text, T.Text) -> b) -> GHandler sub Yablog b
+getReCAPTCHA f = do
+  mRe <- extraReCAPTCHA . appExtra . settings <$> getYesod
+  case mRe of
+    Nothing -> fail "ReCAPTCHA is not enabled."
+    Just re -> return $ f re
 
 -- This instance is required to use forms. You can modify renderMessage to
 -- achieve customized and internationalized form validation messages.
