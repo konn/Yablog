@@ -18,21 +18,22 @@ module Import
     , (<>)
 #endif
     ) where
-
-import Prelude hiding (writeFile, readFile, head, tail, init, last)
-import Yesod   hiding (Route(..), Header(..))
-import Foundation
-import Data.Monoid (Monoid (mappend, mempty, mconcat))
-import Control.Applicative ((<$>), (<*>), pure)
-import Data.Text (Text)
-import qualified Data.Text as T
-import Settings.StaticFiles
-import Text.Pandoc hiding (Null)
-import Yesod.Auth
-import Data.Time
-import Forms
-import Data.Maybe
-import Control.Monad
+import           Control.Applicative  (pure, (<$>), (<*>))
+import           Control.Monad
+import           Data.Maybe
+import           Data.Monoid          (Monoid (mappend, mempty, mconcat))
+import           Data.Text            (Text)
+import qualified Data.Text            as T
+import           Data.Time
+import           Forms
+import           Foundation
+import           Prelude              hiding (head, init, last, readFile, tail,
+                                       writeFile)
+import           Settings.Development
+import           Settings.StaticFiles
+import           Text.Pandoc          hiding (Null)
+import           Yesod                hiding (Header (..), Route (..))
+import           Yesod.Auth
 
 articleView :: Maybe String -> Article -> Widget
 articleView mid article = do
@@ -93,7 +94,7 @@ withArticleAuth act = withArticle $ \ent@(Entity _ art) -> do
   when (uid /= articleAuthor art) $ do
     permissionDenied "You are not allowed to delete those comment(s)."
   act ent
- 
+
 #if __GLASGOW_HASKELL__ < 740
 infixr 5 <>
 (<>) :: Monoid m => m -> m -> m

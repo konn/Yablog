@@ -25,60 +25,61 @@ module Foundation
     , getIPAddrProxy
     ) where
 
-import Prelude
-import Data.Data
-import Yesod
-import Data.Default (def)
-import Yesod.Static
-import qualified Network.Wai as W
-import Settings.StaticFiles
-import Settings.Development
-import Yesod.RssFeed
-import Yesod.AtomFeed
-import Yesod.Auth
-import Yesod.Auth.BrowserId
-import Yesod.Auth.GoogleEmail
-import Yesod.Default.Config
-import Yesod.ReCAPTCHA
-import Yesod.Default.Util (addStaticContentExternal)
-import Network.HTTP.Conduit (Manager)
-import qualified Settings
-import qualified Data.ByteString.Lazy as L
+import           Control.Applicative
+import           Control.Monad
+import qualified Data.ByteString.Char8           as BS
+import qualified Data.ByteString.Lazy            as L
+import qualified Data.ByteString.Lazy.Char8      as LBS
+import           Data.Data
+import           Data.Default                    (def)
+import           Data.List                       (isPrefixOf, nub, sort)
+import           Data.Maybe
+import qualified Data.Text                       as T
+import qualified Data.Text.Encoding              as T
+import           Data.Time
+import           Database.Persist.MongoDB        hiding (master)
 import qualified Database.Persist.Store
-import Database.Persist.MongoDB hiding (master)
-import Model
-import Text.Jasmine (minifym)
-import Web.ClientSession (getKey)
-import Text.Hamlet (hamletFile)
-import Data.List (nub, sort)
-import Data.Maybe
-import Network.Mail.Mime
-import Data.Time
-import System.FilePath hiding (joinPath)
-import System.Locale
-import Control.Applicative
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
-import Markups
-import Network.HTTP.Types
-import qualified Data.ByteString.Lazy.Char8 as LBS
-import Network.Socket
-import Control.Monad
-import Network.URI
-import System.IO.Unsafe
-import Text.Pandoc
-import Data.List (isPrefixOf)
-import Settings
+import           Markups
+import           Model
+import           Network.HTTP.Conduit            (Manager)
+import           Network.HTTP.Types
+import           Network.Mail.Mime
+import           Network.Socket
+import           Network.URI
+import qualified Network.Wai                     as W
+import           Prelude
+import           Settings
+import qualified Settings
+import           Settings.Development
+import           Settings.StaticFiles
+import           System.FilePath                 hiding (joinPath)
+import           System.IO.Unsafe
+import           System.Locale
+import           Text.Blaze.Html.Renderer.String
+import           Text.Hamlet                     (hamletFile)
+import           Text.Jasmine                    (minifym)
+import           Text.Pandoc
+import           Web.ClientSession               (getKey)
+import           Yesod
+import           Yesod.AtomFeed
+import           Yesod.Auth
+import           Yesod.Auth.BrowserId
+import           Yesod.Auth.GoogleEmail
+import           Yesod.Default.Config
+import           Yesod.Default.Util              (addStaticContentExternal)
+import           Yesod.ReCAPTCHA
+import           Yesod.RssFeed
+import           Yesod.Static
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
 -- starts running, such as database connections. Every handler will have
 -- access to the data present here.
 data Yablog = Yablog
-    { settings :: AppConfig DefaultEnv Extra
-    , getStatic :: Static -- ^ Settings for static file serving.
-    , connPool :: Database.Persist.Store.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
-    , httpManager :: Manager
+    { settings      :: AppConfig DefaultEnv Extra
+    , getStatic     :: Static -- ^ Settings for static file serving.
+    , connPool      :: Database.Persist.Store.PersistConfigPool Settings.PersistConfig -- ^ Database connection pool.
+    , httpManager   :: Manager
     , persistConfig :: Settings.PersistConfig
     }
 
@@ -128,7 +129,7 @@ markupRender' mid tran article = do
   usr <- runDB $ get404 $ articleAuthor article
   let markup = fromMaybe "markdown" $ articleMarkup article <|> extraMarkup extra
   let trans = bottomUpM tran . bottomUp (procAttach article)
-              . (maybe id (addAmazonAssociateLink . T.unpack) $ userAmazon usr)
+              . maybe id (addAmazonAssociateLink . T.unpack) (userAmazon usr)
   renderMarkup mid markup trans $ articleBody article
 
 markupRender :: Maybe String -> Article -> GHandler sub Yablog Html
@@ -247,7 +248,7 @@ instance YesodAuth Yablog where
         x <- getBy $ UniqueUser $ credsIdent creds
         case x of
             Just (Entity uid _) -> return $ Just uid
-            Nothing -> do
+            Nothing ->
                 fmap Just $ insert $
                   User (credsIdent creds) (credsIdent creds) Nothing Nothing "ja" "" Nothing
 
@@ -319,7 +320,7 @@ commentAnchor c = T.concat [ "comment-"
 hostToString :: SockAddr -> String
 hostToString (SockAddrUnix str) = str
 hostToString (SockAddrInet _ host) = unsafePerformIO $ inet_ntoa host
-hostToString addr@(SockAddrInet6 _ _ _ _) = unsafePerformIO $
+hostToString addr@SockAddrInet6{} = unsafePerformIO $
                  fst `liftM` getNameInfo [NI_NUMERICHOST] True False addr >>=
                  maybe (fail "showsPrec: impossible internal error") return
 

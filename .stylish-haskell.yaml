@@ -1,0 +1,27 @@
+'language_extensions':
+- 'TemplateHaskell'
+- 'QuasiQuotes'
+- 'OverloadedStrings'
+- 'NoImplicitPrelude'
+- 'CPP'
+- 'MultiParamTypeClasses'
+- 'TypeFamilies'
+- 'GADTs'
+- 'GeneralizedNewtypeDeriving'
+- 'FlexibleContexts'
+- 'ViewPatterns'
+- 'EmptyDataDecls'
+'steps':
+- 'imports':
+    'align': 'global'
+- 'language_pragmas':
+    'style': 'line'
+    'remove_redundant': |-
+      true
+- 'records': {}
+- 'tabs':
+    'spaces': |-
+      8
+- 'trailing_whitespace': {}
+'columns': |-
+  80

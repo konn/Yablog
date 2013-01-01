@@ -2,26 +2,26 @@ module Forms ( articleForm, articleForm', commentDeleteForm
              , commentForm, commentForm', trackbackForm
              , trackbackDeleteForm
              ) where
-import Yesod.Form
-import Prelude
-import Model
-import Control.Applicative
-import Foundation
-import Yesod hiding (Route(..))
-import Data.Text (Text)
-import Data.Time
-import Control.Monad
-import Data.Maybe
-import Control.Arrow
-import Markups
-import Yesod.Default.Config
-import qualified Network.Wai as W
-import qualified Data.Text as T
-import Data.Monoid
-import qualified Data.Map as M
-import Control.Monad.Writer.Class
-import Control.Monad.RWS ()
-import Yesod.ReCAPTCHA
+import           Control.Applicative
+import           Control.Arrow
+import           Control.Monad
+import           Control.Monad.RWS          hiding (lift)
+import           Control.Monad.Writer.Class
+import qualified Data.Map                   as M
+import           Data.Maybe
+import           Data.Monoid
+import           Data.Text                  (Text)
+import qualified Data.Text                  as T
+import           Data.Time
+import           Foundation
+import           Markups
+import           Model
+import qualified Network.Wai                as W
+import           Prelude
+import           Yesod                      hiding (Route (..))
+import           Yesod.Default.Config
+import           Yesod.Form
+import           Yesod.ReCAPTCHA
 
 type URL = String
 articleForm :: Form (Article, [Text], [URL])
@@ -176,8 +176,6 @@ commentForm' mcom art html = do
             <*> pure art
             <*> pure ipaddr
             <*  recap
-            
-
 
 commentForm :: Maybe Comment -> Article -> Form Comment
 commentForm mcom art html = do
